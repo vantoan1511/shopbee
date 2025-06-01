@@ -1,0 +1,65 @@
+plugins {
+    id 'java'
+    id 'io.quarkus'
+    id 'org.openapi.generator' version '7.13.0'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+// Project dependencies
+
+dependencies {
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+
+    implementation "jakarta.annotation:jakarta.annotation-api:3.0.0"
+    implementation "jakarta.validation:jakarta.validation-api:3.1.1"
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:4.0.0"
+    implementation "com.fasterxml.jackson.core:jackson-core:2.19.0"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:2.19.0"
+
+    implementation 'io.quarkus:quarkus-rest'
+    implementation 'io.quarkus:quarkus-rest-jackson'
+
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
+}
+
+group "${projectGroupId}"
+version "${projectVersion}"
+
+openApiGenerate {
+    generatorName = "jaxrs-spec"
+    inputSpec = "$rootDir/src/main/resources/api-specs/shopbee-user-service-api-spec.yaml"
+    outputDir = "$buildDir/generated/openapi"
+    apiPackage = "${projectGroupId}.api"
+    modelPackage = "${projectGroupId}.model"
+    invokerPackage = "${projectGroupId}.invoker"
+    configOptions = [
+            library                       : "quarkus",
+            dateLibrary                   : "java8",
+            interfaceOnly                 : "true",
+            useSwaggerAnnotations         : "false",
+            returnResponse                : "true",
+            useJakartaEe                  : "true",
+            bigDecimalAsString            : "true",
+            booleanGetterPrefix           : "get",
+            generateBuilders              : "true",
+            generateConstructorWithAllArgs: "true",
+            hideGenerationTimestamp       : "true",
+            openApiNullable               : "false",
+            serializableModel             : "true",
+    ]
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir file("$buildDir/generated/openapi/src/gen/java")
+        }
+    }
+}
+
+compileJava.dependsOn tasks.openApiGenerate

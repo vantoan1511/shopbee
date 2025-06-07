@@ -9,10 +9,14 @@ package com.shopbee.user.control.service.impl;
 
 import com.shopbee.user.control.exception.UserServiceException;
 import com.shopbee.user.control.mapper.AddressMapper;
+import com.shopbee.user.control.mapper.PhoneMapper;
 import com.shopbee.user.control.mapper.UserMapper;
 import com.shopbee.user.control.repository.AddressRepository;
+import com.shopbee.user.control.repository.PhoneRepository;
 import com.shopbee.user.control.repository.UsersRepository;
 import com.shopbee.user.control.service.UserService;
+import com.shopbee.user.entity.Phone;
+import com.shopbee.user.entity.PhoneId;
 import com.shopbee.user.model.Address;
 import com.shopbee.user.model.CreateUserAddressRequest;
 import com.shopbee.user.model.CreateUserRequest;
@@ -41,27 +45,33 @@ public class UserServiceImpl implements UserService {
 
     private final UsersRepository usersRepository;
     private final AddressRepository addressRepository;
+    private final PhoneRepository phoneRepository;
 
     private final UserMapper userMapper;
     private final AddressMapper addressMapper;
+    private final PhoneMapper phoneMapper;
 
     /**
      * Instantiates a new User service.
      *
      * @param usersRepository   the users repository
      * @param addressRepository the address repository
+     * @param phoneRepository   the phone repository
      * @param userMapper        the user mapper
      * @param addressMapper     the address mapper
+     * @param phoneMapper       the phone mapper
      */
     @Inject
     public UserServiceImpl(UsersRepository usersRepository,
-                           AddressRepository addressRepository,
+                           AddressRepository addressRepository, PhoneRepository phoneRepository,
                            UserMapper userMapper,
-                           AddressMapper addressMapper) {
+                           AddressMapper addressMapper, PhoneMapper phoneMapper) {
         this.usersRepository = usersRepository;
         this.addressRepository = addressRepository;
+        this.phoneRepository = phoneRepository;
         this.userMapper = userMapper;
         this.addressMapper = addressMapper;
+        this.phoneMapper = phoneMapper;
     }
 
     @Override
@@ -88,6 +98,12 @@ public class UserServiceImpl implements UserService {
         validateCreateUsername(tenantId, user.getUsername());
         validateCreateEmail(tenantId, user.getEmail());
 
+        Phone phone = user.getPhone();
+        if (Objects.nonNull(phone)) {
+            validateCreatePhone(phone);
+            phone.setUser(user);
+        }
+
         usersRepository.persist(user);
 
         return user.getId();
@@ -105,6 +121,20 @@ public class UserServiceImpl implements UserService {
             throw getUserNotFound();
         }
 
+        PhoneId phoneId = phoneMapper.toPhone(updateUserByIdRequest.getPhone());
+        if (Objects.nonNull(phoneId)) {
+            Phone phone = phoneRepository.findById(phoneId);
+            if (Objects.nonNull(phone)) {
+                validateUpdatePhone(userId, phone);
+            } else {
+                phone = new Phone();
+                phone.setId(phoneId);
+                phone.setTenantId(tenantId);
+                phone.setUser(user);
+                user.setPhone(phone);
+            }
+        }
+
         userMapper.updateUser(updateUserByIdRequest, user);
     }
 
@@ -120,7 +150,28 @@ public class UserServiceImpl implements UserService {
             throw getUserNotFound();
         }
 
+        PhoneId phoneId = phoneMapper.toPhone(patchUserByIdRequest.getPhone());
+        if (Objects.nonNull(phoneId)) {
+            Phone phone = phoneRepository.findById(phoneId);
+            if (Objects.nonNull(phone)) {
+                validateUpdatePhone(userId, phone);
+            } else {
+                phone = new Phone();
+                phone.setId(phoneId);
+                phone.setTenantId(tenantId);
+                phone.setUser(user);
+                user.setPhone(phone);
+            }
+        }
+
         userMapper.patchUser(patchUserByIdRequest, user);
+    }
+
+    private void validateUpdatePhone(String userId, Phone phone) {
+        if (!phone.getUser().getId().equals(userId)) {
+            LOG.warn("Attempts to update user with existing phoneId [{}]", phone.getPhoneNumber());
+            throw UserServiceException.conflict("Phone already exists");
+        }
     }
 
     @Override
@@ -251,6 +302,18 @@ public class UserServiceImpl implements UserService {
         if (usersRepository.existedByEmailExcludedById(tenantId, email, userId)) {
             LOG.warn("Attempts to update user with existing email [{}]", email);
             throw UserServiceException.conflict("User with email already exists");
+        }
+    }
+
+    /**
+     * Validate create phone.
+     *
+     * @param phone the phone
+     */
+    private void validateCreatePhone(Phone phone) {
+        if (Objects.nonNull(phoneRepository.findById(phone.getId()))) {
+            LOG.warn("Attempts to create user with existing phone [{}]", phone.getPhoneNumber());
+            throw UserServiceException.conflict("Phone already exists");
         }
     }
 

@@ -51,9 +51,10 @@ public interface UserMapper {
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "phone", ignore = true)
     @Mapping(target = "defaultAddress", ignore = true)
     @Mapping(target = "tenantId", source = "tenantId")
+    @Mapping(target = "phone.id", source = "createUserRequest.phone")
+    @Mapping(target = "phone.tenantId", source = "tenantId")
     User toUser(String tenantId, CreateUserRequest createUserRequest);
 
     /**
@@ -92,10 +93,10 @@ public interface UserMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", ignore = true)
-    @Mapping(target = "phone", ignore = true)
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "defaultAddress", ignore = true)
+    @Mapping(target = "phone.id", source = "updateUserByIdRequest.phone")
     void updateUser(UpdateUserByIdRequest updateUserByIdRequest, @MappingTarget User user);
 }

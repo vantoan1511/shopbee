@@ -30,6 +30,14 @@ public class Phone extends AbstractEntity {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    public String getPhoneNumber() {
+        if (id == null) {
+            return null;
+        }
+
+        return id.getPhoneNumber();
+    }
+
     public PhoneId getId() {
         return id;
     }

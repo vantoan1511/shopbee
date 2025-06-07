@@ -7,12 +7,14 @@
 
 package com.shopbee.user.control.mapper;
 
-import com.shopbee.user.entity.Phone;
+import com.shopbee.user.entity.PhoneId;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
+/**
+ * The interface Phone mapper.
+ */
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PhoneMapper {
 
@@ -22,8 +24,5 @@ public interface PhoneMapper {
      * @param phone the phone
      * @return the phone
      */
-    @Mapping(target = "id.countryCode", source = "countryCode")
-    @Mapping(target = "id.number", source = "number")
-    Phone toPhone(com.shopbee.user.model.Phone phone);
-
+    PhoneId toPhone(com.shopbee.user.model.Phone phone);
 }

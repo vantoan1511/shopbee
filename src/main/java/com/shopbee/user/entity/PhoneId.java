@@ -24,6 +24,10 @@ public class PhoneId implements Serializable {
     @Column
     private String number;
 
+    public String getPhoneNumber() {
+        return countryCode + number;
+    }
+
     public String getCountryCode() {
         return countryCode;
     }

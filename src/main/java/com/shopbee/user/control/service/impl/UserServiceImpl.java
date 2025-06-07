@@ -45,6 +45,14 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final AddressMapper addressMapper;
 
+    /**
+     * Instantiates a new User service.
+     *
+     * @param usersRepository   the users repository
+     * @param addressRepository the address repository
+     * @param userMapper        the user mapper
+     * @param addressMapper     the address mapper
+     */
     @Inject
     public UserServiceImpl(UsersRepository usersRepository,
                            AddressRepository addressRepository,
@@ -58,11 +66,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUsers(String tenantId, Integer offset, Integer limit) {
-        Integer pageIndex = Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
-        Integer pageSize = Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
-
         List<com.shopbee.user.entity.User> users = usersRepository.findAll(tenantId)
-                .page(pageIndex, pageSize)
+                .page(getPageIndex(offset), getPageSize(limit))
                 .list();
 
         return userMapper.toUsers(users);
@@ -187,6 +192,26 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUserAddress(String tenantId, String userId, String addressId) {
         addressRepository.deleteById(addressId);
+    }
+
+    /**
+     * Gets page index.
+     *
+     * @param offset the offset
+     * @return the page index
+     */
+    private int getPageIndex(Integer offset) {
+        return Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
+    }
+
+    /**
+     * Gets page size.
+     *
+     * @param limit the limit
+     * @return the page size
+     */
+    private int getPageSize(Integer limit) {
+        return Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
     }
 
     /**

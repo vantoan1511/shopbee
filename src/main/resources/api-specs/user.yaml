@@ -68,8 +68,6 @@ paths:
                       readOnly: true
                     defaultAddress:
                       readOnly: true
-                    phone:
-                      readOnly: true
                     status:
                       type: string
                       default: "ACTIVE"
@@ -162,8 +160,6 @@ paths:
                       readOnly: true
                     addresses:
                       readOnly: true
-                    phone:
-                      readOnly: true
                     createdAt:
                       readOnly: true
                     updatedAt:
@@ -210,8 +206,6 @@ paths:
                     username:
                       readOnly: true
                     addresses:
-                      readOnly: true
-                    phone:
                       readOnly: true
                     createdAt:
                       readOnly: true

@@ -5,18 +5,15 @@
  * MIT License: https://mit-license.org
  */
 
-package com.shopbee.user.service.boundary.api;
+package com.shopbee.user.boundary.api;
 
-import com.shopbee.api.UsersApi;
-import com.shopbee.model.CreateUserAddressRequest;
-import com.shopbee.model.CreateUserRequest;
-import com.shopbee.model.PatchUserAddressRequest;
-import com.shopbee.model.PatchUserByIdRequest;
-import com.shopbee.model.UpdateUserByIdRequest;
-import jakarta.enterprise.context.ApplicationScoped;
+import com.shopbee.user.model.CreateUserAddressRequest;
+import com.shopbee.user.model.CreateUserRequest;
+import com.shopbee.user.model.PatchUserAddressRequest;
+import com.shopbee.user.model.PatchUserByIdRequest;
+import com.shopbee.user.model.UpdateUserByIdRequest;
 import jakarta.ws.rs.core.Response;
 
-@ApplicationScoped
 public class UserApiImpl implements UsersApi {
 
     @Override

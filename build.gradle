@@ -14,11 +14,8 @@ repositories {
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
 
-    implementation "jakarta.annotation:jakarta.annotation-api:3.0.0"
-    implementation "jakarta.validation:jakarta.validation-api:3.1.1"
-    implementation "jakarta.ws.rs:jakarta.ws.rs-api:4.0.0"
-    implementation "com.fasterxml.jackson.core:jackson-core:2.19.0"
-    implementation "com.fasterxml.jackson.core:jackson-annotations:2.19.0"
+    implementation "jakarta.validation:jakarta.validation-api"
+    implementation "io.quarkus:quarkus-hibernate-validator"
 
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-rest-jackson'
@@ -30,36 +27,58 @@ dependencies {
 group "${projectGroupId}"
 version "${projectVersion}"
 
-openApiGenerate {
-    generatorName = "jaxrs-spec"
-    inputSpec = "$rootDir/src/main/resources/api-specs/shopbee-user-service-api-spec.yaml"
-    outputDir = "$buildDir/generated/openapi"
-    apiPackage = "${projectGroupId}.api"
-    modelPackage = "${projectGroupId}.model"
-    invokerPackage = "${projectGroupId}.invoker"
-    configOptions = [
-            library                       : "quarkus",
-            dateLibrary                   : "java8",
-            interfaceOnly                 : "true",
-            useSwaggerAnnotations         : "false",
-            returnResponse                : "true",
-            useJakartaEe                  : "true",
-            bigDecimalAsString            : "true",
-            booleanGetterPrefix           : "get",
-            generateBuilders              : "true",
-            generateConstructorWithAllArgs: "true",
-            hideGenerationTimestamp       : "true",
-            openApiNullable               : "false",
-            serializableModel             : "true",
-    ]
+// Generate OpenAPI specs from YAML files
+
+def apiSpecsDir = "$rootDir/src/main/resources/api-specs"
+def generatedSrcDir = "$buildDir/generated/openapi"
+
+// Find all .yaml files in api-specs directory
+def specFiles = fileTree(apiSpecsDir).matching { include '*.yaml' }
+
+// Create an openApiGenerate task for each spec file
+specFiles.each { specFile ->
+    def specName = specFile.name.replace('.yaml', '')
+    def taskName = "openApiGenerate_${specName}"
+
+    tasks.register(taskName, org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        generatorName = 'jaxrs-spec'
+        inputSpec = specFile.path
+        outputDir = "$generatedSrcDir/$specName"
+        apiPackage = "${project.group}.${specName}.boundary.api"
+        modelPackage = "${project.group}.${specName}.model"
+        invokerPackage = "${project.group}.${specName}.invoker"
+        configOptions = [
+                library                       : 'quarkus',
+                dateLibrary                   : 'java8',
+                interfaceOnly                 : 'true',
+                useSwaggerAnnotations         : 'false',
+                returnResponse                : 'true',
+                useJakartaEe                  : 'true',
+                bigDecimalAsString            : 'true',
+                booleanGetterPrefix           : 'get',
+                generateBuilders              : 'true',
+                generateConstructorWithAllArgs: 'true',
+                hideGenerationTimestamp       : 'true',
+                openApiNullable               : 'false',
+                serializableModel             : 'true',
+                useBeanValidation             : 'true',
+        ]
+    }
 }
 
 sourceSets {
     main {
         java {
-            srcDir file("$buildDir/generated/openapi/src/gen/java")
+            srcDirs = ['src/main/java'] + specFiles.collect { "$generatedSrcDir/${it.name.replace('.yaml', '')}/src/gen/java" }
+            exclude '**/invoker/RestApplication.java'
         }
     }
 }
 
-compileJava.dependsOn tasks.openApiGenerate
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+            '-parameters'
+    ]
+}
+
+compileJava.dependsOn tasks.named { it.startsWith('openApiGenerate_') }

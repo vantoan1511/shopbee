@@ -1,0 +1,112 @@
+openapi: "3.0.3"
+info:
+  version: 0.0.1
+  title: Tenant Management API
+  description: This is the API documentation for the Tenant Management API.
+  license:
+    name: Copyright by Shopbee, all rights reserved.
+
+paths:
+  /tenants:
+    get:
+      summary: Get all tenants
+      operationId: getTenants
+      tags:
+        - tenants
+      responses:
+        200:
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+    post:
+      summary: Create a tenant
+      operationId: createTenant
+      tags:
+        - tenants
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Tenant"
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                  required:
+                    - name
+                    - subdomain
+                    - adminEmail
+
+      responses:
+        201:
+          description: Created tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden
+        405:
+          description: Method Not Allowed
+        409:
+          description: Conflict
+        503:
+          description: Service Unavailable
+      
+  /tenants/{tenantId}:
+    get:
+      summary: Get tenant by id
+      operationId: getTenantById
+      tags:
+        - tenants
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          description: The id of the tenant
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: The tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden
+        405:
+          description: Method Not Allowed
+        409:
+          description: Conflict
+        503:
+          description: Service Unavailable
+
+components:
+  schemas:
+    Tenant:
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        subdomain:
+          type: string
+        adminEmail:
+          type: string

@@ -7,19 +7,19 @@
 
 package com.shopbee.common.exception.dto;
 
-public class ViolationError {
+public class ViolationError extends Error {
 
     private String field;
     private String value;
-    private String message;
 
     public ViolationError() {
+        super();
     }
 
     public ViolationError(String field, String value, String message) {
+        super(message);
         this.field = field;
         this.value = value;
-        this.message = message;
     }
 
     public String getField() {
@@ -36,13 +36,5 @@ public class ViolationError {
 
     public void setValue(String value) {
         this.value = value;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }

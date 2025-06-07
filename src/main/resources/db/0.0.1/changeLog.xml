@@ -1,0 +1,114 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="shopbee" id="shopbee-service-1">
+        <createTable tableName="shopbee_user">
+            <column name="ID" type="VARCHAR(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="USERNAME" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EMAIL" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FIRST_NAME" type="VARCHAR(64)"/>
+            <column name="LAST_NAME" type="VARCHAR(64)"/>
+            <column name="GENDER" type="VARCHAR(10)"/>
+            <column name="BIRTH_DATE" type="DATE"/>
+            <column name="STATUS" type="VARCHAR(10)"/>
+            <column name="CREATED_AT" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="UPDATED_AT" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="DEFAULT_ADDRESS" type="VARCHAR(64)"/>
+            <column name="TENANT_ID" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="shopbee-service-2" author="shopbee">
+        <createTable tableName="shopbee_address">
+            <column name="ID" type="VARCHAR(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="TYPE" type="VARCHAR(10)"/>
+            <column name="STREET" type="VARCHAR(255)"/>
+            <column name="WARD" type="VARCHAR(255)"/>
+            <column name="DISTRICT" type="VARCHAR(255)"/>
+            <column name="CITY" type="VARCHAR(255)"/>
+            <column name="POSTAL_CODE" type="VARCHAR(8)"/>
+            <column name="USER_ID" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TENANT_ID" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="shopbee-service-3" author="shopbee">
+        <createTable tableName="shopbee_phone">
+            <column name="COUNTRY_CODE" type="VARCHAR(5)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NUMBER" type="VARCHAR(15)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="USER_ID" type="VARCHAR(64)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="TENANT_ID" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="shopbee-service-4" author="shopbee">
+        <addUniqueConstraint tableName="shopbee_user"
+                             columnNames="USERNAME, TENANT_ID"
+                             constraintName="unique_username"/>
+    </changeSet>
+
+    <changeSet id="shopbee-service-5" author="shopbee">
+        <addUniqueConstraint tableName="shopbee_user"
+                             columnNames="EMAIL, TENANT_ID"
+                             constraintName="unique_email"/>
+    </changeSet>
+
+    <changeSet id="shopbee-service-6" author="shopbee">
+        <addUniqueConstraint tableName="shopbee_phone" columnNames="COUNTRY_CODE, NUMBER, TENANT_ID"
+                             constraintName="unique_phone"/>
+    </changeSet>
+
+    <changeSet id="shopbee-service-7" author="shopbee">
+        <addPrimaryKey tableName="shopbee_phone" columnNames="COUNTRY_CODE, NUMBER" constraintName="pk_phone"/>
+    </changeSet>
+
+    <changeSet id="shopbee-service-8" author="shopbee">
+        <addForeignKeyConstraint baseTableName="shopbee_user"
+                                 baseColumnNames="DEFAULT_ADDRESS"
+                                 constraintName="fk_user_default_address"
+                                 referencedTableName="shopbee_address"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="shopbee-service-9" author="shopbee">
+        <addForeignKeyConstraint baseTableName="shopbee_address"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="fk_address_user"
+                                 referencedTableName="shopbee_user"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="shopbee-service-10" author="shopbee">
+        <addForeignKeyConstraint baseTableName="shopbee_phone"
+                                 baseColumnNames="USER_ID"
+                                 constraintName="fk_phone_user"
+                                 referencedTableName="shopbee_user"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

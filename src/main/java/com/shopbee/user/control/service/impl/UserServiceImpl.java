@@ -63,9 +63,11 @@ public class UserServiceImpl implements UserService {
      */
     @Inject
     public UserServiceImpl(UsersRepository usersRepository,
-                           AddressRepository addressRepository, PhoneRepository phoneRepository,
+                           AddressRepository addressRepository,
+                           PhoneRepository phoneRepository,
                            UserMapper userMapper,
-                           AddressMapper addressMapper, PhoneMapper phoneMapper) {
+                           AddressMapper addressMapper,
+                           PhoneMapper phoneMapper) {
         this.usersRepository = usersRepository;
         this.addressRepository = addressRepository;
         this.phoneRepository = phoneRepository;
@@ -76,34 +78,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUsers(String tenantId, Integer offset, Integer limit) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Getting users with offset [{}] and limit [{}]...", offset, limit);
-        }
+        LOG.debug("Getting users with offset [{}] and limit [{}]...", offset, limit);
 
         List<com.shopbee.user.entity.User> users = usersRepository.findAll(tenantId)
                 .page(getPageIndex(offset), getPageSize(limit))
                 .list();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Got [{}] users", users.size());
-        }
+        LOG.debug("Got [{}] users", users.size());
 
         return userMapper.toUsers(users);
     }
 
     @Override
     public User getUserById(String tenantId, String userId) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Getting user by id [{}]...", userId);
-        }
+        LOG.debug("Getting user by id [{}]...", userId);
 
         User user = Optional.ofNullable(usersRepository.findById(tenantId, userId))
                 .map(userMapper::toUser)
-                .orElseThrow(this::getUserNotFound);
+                .orElseThrow(this::userNotFoundException);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Got user [id={}, username={}, status={}]", user.getId(), user.getUsername(), user.getStatus());
-        }
+        LOG.debug("Got user [id={}, username={}, status={}]", user.getId(), user.getUsername(), user.getStatus());
 
         return user;
     }
@@ -111,9 +105,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public String createUser(String tenantId, CreateUserRequest createUserRequest) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Creating user with username [{}] and email [{}]...", createUserRequest.getUsername(), createUserRequest.getEmail());
-        }
+        LOG.debug("Creating user with username [{}] and email [{}]...", createUserRequest.getUsername(), createUserRequest.getEmail());
 
         com.shopbee.user.entity.User user = userMapper.toUser(tenantId, createUserRequest);
 
@@ -128,9 +120,7 @@ public class UserServiceImpl implements UserService {
 
         usersRepository.persist(user);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Created user with id [{}]", user.getId());
-        }
+        LOG.debug("Created user with id [{}]", user.getId());
 
         return user.getId();
     }
@@ -138,9 +128,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateUserById(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Updating user with id [{}]...", userId);
-        }
+        LOG.debug("Updating user with id [{}]...", userId);
 
         validateUpdateEmail(tenantId, userId, updateUserByIdRequest.getEmail());
 
@@ -148,7 +136,7 @@ public class UserServiceImpl implements UserService {
 
         if (Objects.isNull(user)) {
             LOG.warn("Attempts to update non - existing user [{}]", userId);
-            throw getUserNotFound();
+            throw userNotFoundException();
         }
 
         PhoneId phoneId = phoneMapper.toPhone(updateUserByIdRequest.getPhone());
@@ -167,17 +155,13 @@ public class UserServiceImpl implements UserService {
 
         userMapper.updateUser(updateUserByIdRequest, user);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Updated user with id [{}]", user.getId());
-        }
+        LOG.debug("Updated user with id [{}]", user.getId());
     }
 
     @Override
     @Transactional
     public void patchUserById(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Patching user with id [{}]...", userId);
-        }
+        LOG.debug("Patching user with id [{}]...", userId);
 
         validateUpdateEmail(tenantId, userId, patchUserByIdRequest.getEmail());
 
@@ -185,7 +169,7 @@ public class UserServiceImpl implements UserService {
 
         if (Objects.isNull(user)) {
             LOG.warn("Attempts to patch non - existing user [{}]", userId);
-            throw getUserNotFound();
+            throw userNotFoundException();
         }
 
         PhoneId phoneId = phoneMapper.toPhone(patchUserByIdRequest.getPhone());
@@ -204,46 +188,36 @@ public class UserServiceImpl implements UserService {
 
         userMapper.patchUser(patchUserByIdRequest, user);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Patched user with id [{}]", user.getId());
-        }
+        LOG.debug("Patched user with id [{}]", user.getId());
     }
 
     @Override
     @Transactional
     public void deleteUserById(String tenantId, String userId) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deleting user with id [{}]...", userId);
-        }
+        LOG.debug("Deleting user with id [{}]...", userId);
 
         com.shopbee.user.entity.User user = usersRepository.findById(tenantId, userId);
 
         if (Objects.isNull(user)) {
             LOG.warn("Attempts to delete non - existing user [{}]", userId);
-            throw getUserNotFound();
+            throw userNotFoundException();
         }
 
         usersRepository.delete(user);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deleted user with id [{}]", userId);
-        }
+        LOG.debug("Deleted user with id [{}]", userId);
     }
 
     @Override
     public List<Address> getUserAddresses(String tenantId, String userId, Integer offset, Integer limit) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Getting user [{}] addresses with offset [{}] and limit [{}]...", userId, offset, limit);
-        }
+        LOG.debug("Getting user [{}] addresses with offset [{}] and limit [{}]...", userId, offset, limit);
 
         int pageIndex = Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
         int pageSize = Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
 
         List<Address> addresses = addressMapper.toAddresses(addressRepository.findByUserId(tenantId, userId, pageIndex, pageSize));
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Got [{}] addresses for user [{}]", addresses.size(), userId);
-        }
+        LOG.debug("Got [{}] addresses for user [{}]", addresses.size(), userId);
 
         return addresses;
     }
@@ -251,15 +225,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public String createUserAddress(String tenantId, String userId, CreateUserAddressRequest createUserAddressRequest) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Creating address for user [{}]...", userId);
-        }
+        LOG.debug("Creating address for user [{}]...", userId);
 
         com.shopbee.user.entity.User user = usersRepository.findById(tenantId, userId);
 
         if (Objects.isNull(user)) {
             LOG.warn("Attempts to create address for non - existing user [{}]", userId);
-            throw getUserNotFound();
+            throw userNotFoundException();
         }
 
         com.shopbee.user.entity.Address address = addressMapper.toAddress(tenantId, createUserAddressRequest);
@@ -269,9 +241,7 @@ public class UserServiceImpl implements UserService {
         addressRepository.persist(address);
 
         String addressId = address.getId();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Created address with id [{}] for user [{}]", addressId, userId);
-        }
+        LOG.debug("Created address with id [{}] for user [{}]", addressId, userId);
 
         return addressId;
     }
@@ -279,9 +249,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateUserAddress(String tenantId, String userId, String addressId, CreateUserAddressRequest createUserAddressRequest) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Updating address [{}] for user [{}]...", addressId, userId);
-        }
+        LOG.debug("Updating address [{}] for user [{}]...", addressId, userId);
 
         com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, addressId, userId);
 
@@ -292,17 +260,13 @@ public class UserServiceImpl implements UserService {
 
         addressMapper.updateAddress(createUserAddressRequest, address);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Updated address with id [{}] for user [{}]", addressId, userId);
-        }
+        LOG.debug("Updated address with id [{}] for user [{}]", addressId, userId);
     }
 
     @Override
     @Transactional
     public void patchUserAddress(String tenantId, String userId, String addressId, PatchUserAddressRequest patchUserAddressRequest) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Patching address [{}] for user [{}]...", addressId, userId);
-        }
+        LOG.debug("Patching address [{}] for user [{}]...", addressId, userId);
 
         com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, addressId, userId);
 
@@ -313,23 +277,17 @@ public class UserServiceImpl implements UserService {
 
         addressMapper.patchAddress(patchUserAddressRequest, address);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Patched address with id [{}] for user [{}]", addressId, userId);
-        }
+        LOG.debug("Patched address with id [{}] for user [{}]", addressId, userId);
     }
 
     @Override
     @Transactional
     public void deleteUserAddress(String tenantId, String userId, String addressId) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deleting address [{}] for user [{}]...", addressId, userId);
-        }
+        LOG.debug("Deleting address [{}] for user [{}]...", addressId, userId);
 
         addressRepository.deleteById(addressId);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deleted address with id [{}] for user [{}]", addressId, userId);
-        }
+        LOG.debug("Deleted address with id [{}] for user [{}]", addressId, userId);
     }
 
     /**
@@ -361,7 +319,7 @@ public class UserServiceImpl implements UserService {
     private void validateCreateEmail(String tenantId, String email) {
         if (usersRepository.existedByEmail(tenantId, email)) {
             LOG.warn("Attempts to create user with existing email [{}]", email);
-            throw UserServiceException.conflict("User with email already exists");
+            throw emailExistsException();
         }
     }
 
@@ -388,7 +346,7 @@ public class UserServiceImpl implements UserService {
     private void validateUpdateEmail(String tenantId, String userId, String email) {
         if (usersRepository.existedByEmailExcludedById(tenantId, email, userId)) {
             LOG.warn("Attempts to update user with existing email [{}]", email);
-            throw UserServiceException.conflict("User with email already exists");
+            throw emailExistsException();
         }
     }
 
@@ -400,7 +358,7 @@ public class UserServiceImpl implements UserService {
     private void validateCreatePhone(Phone phone) {
         if (Objects.nonNull(phoneRepository.findById(phone.getId()))) {
             LOG.warn("Attempts to create user with existing phone [{}]", phone.getPhoneNumber());
-            throw UserServiceException.conflict("Phone already exists");
+            throw phoneExistsException();
         }
     }
 
@@ -413,8 +371,26 @@ public class UserServiceImpl implements UserService {
     private void validateUpdatePhone(String userId, Phone phone) {
         if (!phone.getUser().getId().equals(userId)) {
             LOG.warn("Attempts to update user with existing phoneId [{}]", phone.getPhoneNumber());
-            throw UserServiceException.conflict("Phone already exists");
+            throw phoneExistsException();
         }
+    }
+
+    /**
+     * Email exists exception user service exception.
+     *
+     * @return the user service exception
+     */
+    private UserServiceException emailExistsException() {
+        return UserServiceException.conflict("User with email already exists");
+    }
+
+    /**
+     * Phone exists exception user service exception.
+     *
+     * @return the user service exception
+     */
+    private UserServiceException phoneExistsException() {
+        return UserServiceException.conflict("Phone already exists");
     }
 
     /**
@@ -422,7 +398,7 @@ public class UserServiceImpl implements UserService {
      *
      * @return the user not found exception
      */
-    private UserServiceException getUserNotFound() {
+    private UserServiceException userNotFoundException() {
         return UserServiceException.notFound("User not found");
     }
 }

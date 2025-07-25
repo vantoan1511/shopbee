@@ -22,18 +22,13 @@ paths:
         - $ref: "#/components/parameters/limit"
       responses:
         200:
-          description: An array of users (paged).
+          description: A list of users.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  allOf:
-                    - $ref: "#/components/schemas/User"
-                    - type: object
-                      properties:
-                        addresses:
-                          writeOnly: true
+                  $ref: "#/components/schemas/User"
         401:
           description: "Unauthorized: JWT token is missing or invalid"
         403:
@@ -66,7 +61,7 @@ paths:
                       readOnly: true
                     addresses:
                       readOnly: true
-                    defaultAddress:
+                    mainAddress:
                       readOnly: true
                     status:
                       type: string
@@ -78,8 +73,6 @@ paths:
                   required:
                     - username
                     - email
-                    - firstName
-                    - lastName
       responses:
         201:
           description: User created
@@ -501,7 +494,6 @@ components:
       properties:
         id:
           type: string
-          readOnly: true
           description: Unique identifier for the user (UUID).
           example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
         username:
@@ -518,10 +510,12 @@ components:
           example: "johndoe@gmail.com"
         firstName:
           type: string
+          maxLength: 64
           description: First name of the user.
           example: "John"
         lastName:
           type: string
+          maxLength: 64
           description: Last name of the user.
           example: "Doe"
         gender:
@@ -544,9 +538,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Address"
-        defaultAddress:
+        mainAddress:
           type: string
-          description: "Identifier of the default address."
+          description: "Identifier of the main address."
           example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
         status:
           type: string
@@ -569,6 +563,10 @@ components:
           readOnly: true
           description: Date and time when the user was last updated. Format is "YYYY-MM-DDTHH:MM:SSZ" (ISO 8601).
           example: "2021-01-01T12:00:00Z"
+    Id:
+      type: string
+      description: Unique identifier for the resource (UUID).
+      example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
   parameters:
     tenantId:
       name: tenantId
@@ -608,13 +606,11 @@ components:
       description: ID of the user to retrieve.
       required: true
       schema:
-        type: string
-        example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+        $ref: "#/components/schemas/Id"
     addressId:
       name: addressId
       in: path
       description: ID of the address to retrieve.
       required: true
       schema:
-        type: string
-        example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+        $ref: "#/components/schemas/Id"

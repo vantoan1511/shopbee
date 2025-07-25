@@ -15,7 +15,7 @@ paths:
         - tenants
       responses:
         200:
-          description: List of tenants
+          description: A list of tenants
           content:
             application/json:
               schema:
@@ -46,23 +46,28 @@ paths:
       responses:
         201:
           description: Created tenant
-          content:
-            application/json:
+          headers:
+            Location:
+              description: URL of the created tenant
               schema:
-                $ref: "#/components/schemas/Tenant"
+                type: string
+                format: uri
+                example: "/tenants/shopbee"
         400:
-          description: Invalid input
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
         401:
-          description: Unauthorized
+          description: "Unauthorized: JWT token is missing or invalid"
         403:
-          description: Forbidden
-        405:
-          description: Method Not Allowed
+          description: "Forbidden: The caller does not have permission"
         409:
-          description: Conflict
+          description: "Conflict: The request could not be completed due to a conflict with the current state of the resource"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
         503:
-          description: Service Unavailable
-      
+          description: "Service Unavailable: The service is temporarily unavailable"
+
   /tenants/{tenantId}:
     get:
       summary: Get tenant by id
@@ -70,43 +75,124 @@ paths:
       tags:
         - tenants
       parameters:
-        - name: tenantId
-          in: path
-          required: true
-          description: The id of the tenant
-          schema:
-            type: integer
-            format: int64
+        - $ref: "#/components/parameters/tenantId"
       responses:
         200:
-          description: The tenant
+          description: The tenant found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Tenant"
-        400:
-          description: Invalid input
         401:
-          description: Unauthorized
+          description: "Unauthorized: JWT token is missing or invalid"
         403:
-          description: Forbidden
-        405:
-          description: Method Not Allowed
-        409:
-          description: Conflict
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
         503:
-          description: Service Unavailable
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+    put:
+      summary: Update tenant by id
+      operationId: updateTenantById
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/Tenant"
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                  required:
+                    - name
+                    - subdomain
+                    - adminEmail
+      responses:
+        200:
+          description: "Updated tenant"
+        400:
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        409:
+          description: "Conflict: The request could not be completed due to a conflict with the current state of the resource"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+    delete:
+      summary: Delete tenant by id
+      operationId: deleteTenantById
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      responses:
+        204:
+          description: "Deleted tenant"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
 
 components:
   schemas:
     Tenant:
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          maxLength: 64
+          minLength: 8
+          description: Unique identifier for the tenant
+          example: "shopbee"
         name:
           type: string
+          maxLength: 255
+          minLength: 8
+          description: Name of the tenant
+          example: "Shopbee"
         subdomain:
           type: string
+          maxLength: 255
+          minLength: 3
+          description: Subdomain for the tenant
+          example: "shopbee"
         adminEmail:
           type: string
+          format: email
+          maxLength: 255
+          description: Admin email for the tenant
+          example: "shopbee.admin@shopbee.com"
+  parameters:
+    tenantId:
+      name: tenantId
+      in: path
+      required: true
+      description: The id of the tenant
+      schema:
+        type: string
+        maxLength: 64
+        example: "shopbee"
+
+security:
+  - BearerAuth: [ ]

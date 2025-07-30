@@ -8,6 +8,7 @@
 package com.shopbee.user.control.mapper;
 
 import com.shopbee.user.entity.PhoneId;
+import com.shopbee.user.model.Phone;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
@@ -24,5 +25,5 @@ public interface PhoneMapper {
      * @param phone the phone
      * @return the phone
      */
-    PhoneId toPhone(com.shopbee.user.model.Phone phone);
+    PhoneId toPhone(Phone phone);
 }

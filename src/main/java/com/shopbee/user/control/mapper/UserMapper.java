@@ -51,7 +51,7 @@ public interface UserMapper {
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "defaultAddress", ignore = true)
+    @Mapping(target = "mainAddress", ignore = true)
     @Mapping(target = "tenantId", source = "tenantId")
     @Mapping(target = "phone.id", source = "createUserRequest.phone")
     @Mapping(target = "phone.tenantId", source = "tenantId")
@@ -65,7 +65,7 @@ public interface UserMapper {
      */
     @Mapping(target = "phone.countryCode", source = "phone.id.countryCode")
     @Mapping(target = "phone.number", source = "phone.id.number")
-    @Mapping(target = "defaultAddress", ignore = true)
+    @Mapping(target = "mainAddress", ignore = true)
     com.shopbee.user.model.User toUser(User user);
 
     /**
@@ -81,7 +81,7 @@ public interface UserMapper {
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "defaultAddress", ignore = true)
+    @Mapping(target = "mainAddress", ignore = true)
     void patchUser(PatchUserByIdRequest patchUserByIdRequest, @MappingTarget User user);
 
     /**
@@ -96,7 +96,7 @@ public interface UserMapper {
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "defaultAddress", ignore = true)
+    @Mapping(target = "mainAddress", ignore = true)
     @Mapping(target = "phone.id", source = "updateUserByIdRequest.phone")
     void updateUser(UpdateUserByIdRequest updateUserByIdRequest, @MappingTarget User user);
 }

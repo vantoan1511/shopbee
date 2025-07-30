@@ -24,12 +24,14 @@ import com.shopbee.user.model.PatchUserAddressRequest;
 import com.shopbee.user.model.PatchUserByIdRequest;
 import com.shopbee.user.model.UpdateUserByIdRequest;
 import com.shopbee.user.model.User;
+import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +42,8 @@ import org.slf4j.LoggerFactory;
 public class UserServiceImpl implements UserService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
-    private static final int DEFAULT_PAGE_SIZE = 20;
-    private static final int DEFAULT_PAGE_INDEX = 0;
+    private static final int DEFAULT_LIMIT = 20;
+    private static final int DEFAULT_OFFSET = 0;
 
     private final UsersRepository usersRepository;
     private final AddressRepository addressRepository;
@@ -78,13 +80,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUsers(String tenantId, Integer offset, Integer limit) {
-        LOG.debug("Getting users with offset [{}] and limit [{}]...", offset, limit);
+        if (StringUtils.isBlank(tenantId)) {
+            LOG.warn("Attempts to get users with empty tenantId");
+            throw UserServiceException.badRequest("tenantId must not be empty");
+        }
+
+        int validOffset = Optional.ofNullable(offset).orElse(DEFAULT_OFFSET);
+        int validLimit = Optional.ofNullable(limit).orElse(DEFAULT_LIMIT);
+
+        LOG.info("Getting users with offset [{}] and limit [{}]...", validOffset, validLimit);
 
         List<com.shopbee.user.entity.User> users = usersRepository.findAll(tenantId)
-                .page(getPageIndex(offset), getPageSize(limit))
-                .list();
+                .page(Page.of(validOffset, validLimit)).list();
 
-        LOG.debug("Got [{}] users", users.size());
+        LOG.info("Got [{}] users", users.size());
 
         return userMapper.toUsers(users);
     }
@@ -212,8 +221,8 @@ public class UserServiceImpl implements UserService {
     public List<Address> getUserAddresses(String tenantId, String userId, Integer offset, Integer limit) {
         LOG.debug("Getting user [{}] addresses with offset [{}] and limit [{}]...", userId, offset, limit);
 
-        int pageIndex = Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
-        int pageSize = Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
+        int pageIndex = Optional.ofNullable(offset).orElse(DEFAULT_OFFSET);
+        int pageSize = Optional.ofNullable(limit).orElse(DEFAULT_LIMIT);
 
         List<Address> addresses = addressMapper.toAddresses(addressRepository.findByUserId(tenantId, userId, pageIndex, pageSize));
 
@@ -290,25 +299,7 @@ public class UserServiceImpl implements UserService {
         LOG.debug("Deleted address with id [{}] for user [{}]", addressId, userId);
     }
 
-    /**
-     * Gets page index.
-     *
-     * @param offset the offset
-     * @return the page index
-     */
-    private int getPageIndex(Integer offset) {
-        return Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
-    }
-
-    /**
-     * Gets page size.
-     *
-     * @param limit the limit
-     * @return the page size
-     */
-    private int getPageSize(Integer limit) {
-        return Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
-    }
+    
 
     /**
      * Validates the uniqueness of the email.
@@ -384,14 +375,7 @@ public class UserServiceImpl implements UserService {
         return UserServiceException.conflict("User with email already exists");
     }
 
-    /**
-     * Phone exists exception user service exception.
-     *
-     * @return the user service exception
-     */
-    private UserServiceException phoneExistsException() {
-        return UserServiceException.conflict("Phone already exists");
-    }
+    
 
     /**
      * Gets the user not found exception.
@@ -400,5 +384,14 @@ public class UserServiceImpl implements UserService {
      */
     private UserServiceException userNotFoundException() {
         return UserServiceException.notFound("User not found");
+    }
+
+    /**
+     * Phone exists exception user service exception.
+     *
+     * @return the user service exception
+     */
+    private UserServiceException phoneExistsException() {
+        return UserServiceException.conflict("Phone already exists");
     }
 }

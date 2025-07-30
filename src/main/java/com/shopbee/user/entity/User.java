@@ -76,8 +76,8 @@ public class User extends AbstractEntity {
     private List<Address> addresses;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "default_address", referencedColumnName = "id")
-    private Address defaultAddress;
+    @JoinColumn(name = "main_address", referencedColumnName = "id")
+    private Address mainAddress;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Phone phone;
@@ -170,12 +170,12 @@ public class User extends AbstractEntity {
         this.addresses = addresses;
     }
 
-    public Address getDefaultAddress() {
-        return defaultAddress;
+    public Address getMainAddress() {
+        return mainAddress;
     }
 
-    public void setDefaultAddress(Address defaultAddress) {
-        this.defaultAddress = defaultAddress;
+    public void setMainAddress(Address mainAddress) {
+        this.mainAddress = mainAddress;
     }
 
     public Phone getPhone() {

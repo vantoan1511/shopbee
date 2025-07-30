@@ -22,7 +22,7 @@
             <column name="STATUS" type="VARCHAR(10)"/>
             <column name="CREATED_AT" type="TIMESTAMP WITH TIME ZONE"/>
             <column name="UPDATED_AT" type="TIMESTAMP WITH TIME ZONE"/>
-            <column name="DEFAULT_ADDRESS" type="VARCHAR(64)"/>
+            <column name="MAIN_ADDRESS" type="VARCHAR(64)"/>
             <column name="TENANT_ID" type="VARCHAR(64)">
                 <constraints nullable="false"/>
             </column>
@@ -89,7 +89,7 @@
 
     <changeSet id="shopbee-service-8" author="shopbee">
         <addForeignKeyConstraint baseTableName="shopbee_user"
-                                 baseColumnNames="DEFAULT_ADDRESS"
+                                 baseColumnNames="MAIN_ADDRESS"
                                  constraintName="fk_user_default_address"
                                  referencedTableName="shopbee_address"
                                  referencedColumnNames="id"/>

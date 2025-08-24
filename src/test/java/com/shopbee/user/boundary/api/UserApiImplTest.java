@@ -1,7 +1,7 @@
 package com.shopbee.user.boundary.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.shopbee.user.control.exception.UserServiceException;
+import com.shopbee.common.exception.dto.ApiServiceException;
 import com.shopbee.user.control.service.UserService;
 import com.shopbee.user.entity.Address;
 import com.shopbee.user.model.CreateUserAddressRequest;
@@ -163,7 +163,7 @@ class UserApiImplTest {
     @Test
     void createUser_usernameExists() {
         CreateUserRequest request = new CreateUserRequest().username(TEST_USERNAME).email(TEST_USER_MAIL);
-        when(userService.createUser(eq(SHOPBEE), any(CreateUserRequest.class))).thenThrow(UserServiceException.conflict("User with username already exists"));
+        when(userService.createUser(eq(SHOPBEE), any(CreateUserRequest.class))).thenThrow(ApiServiceException.conflict("User with username already exists"));
         given()
                 .when()
                 .header(TENANT_ID, SHOPBEE)
@@ -262,7 +262,7 @@ class UserApiImplTest {
      */
     @Test
     void getUserById_notFound() {
-        when(userService.getUserById(SHOPBEE, NON_EXISTING_USER_ID)).thenThrow(UserServiceException.notFound("User not found"));
+        when(userService.getUserById(SHOPBEE, NON_EXISTING_USER_ID)).thenThrow(ApiServiceException.notFound("User not found"));
         given()
                 .when()
                 .header(TENANT_ID, SHOPBEE)

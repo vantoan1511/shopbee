@@ -7,12 +7,13 @@
 
 package com.shopbee.common.exception.mapper;
 
-import com.shopbee.common.exception.dto.ViolationError;
+import com.shopbee.common.exception.dto.ValidationError;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,22 +24,31 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     @Override
     public Response toResponse(ConstraintViolationException e) {
 
-        Set<ViolationError> violations = e.getConstraintViolations().stream()
+        Set<ValidationError> violations = e.getConstraintViolations().stream()
                 .map(ConstraintViolationExceptionMapper::from)
                 .collect(Collectors.toSet());
 
         return Response.status(Response.Status.BAD_REQUEST).entity(violations).build();
     }
 
-    private static ViolationError from(ConstraintViolation<?> constraintViolation) {
+    private static ValidationError from(ConstraintViolation<?> constraintViolation) {
         if (Objects.isNull(constraintViolation)) {
             return null;
         }
 
-        ViolationError violationError = new ViolationError();
-        violationError.setField(constraintViolation.getPropertyPath().toString());
-        violationError.setValue(constraintViolation.getInvalidValue() != null ? constraintViolation.getInvalidValue().toString() : null);
-        violationError.setMessage(constraintViolation.getMessage());
-        return violationError;
+        ValidationError validationError = new ValidationError();
+        validationError.setProperty(constraintViolation.getPropertyPath().toString());
+        validationError.setValue(getValue(constraintViolation));
+        validationError.setMessage(constraintViolation.getMessage());
+
+        return validationError;
+    }
+
+    private static String getValue(ConstraintViolation<?> constraintViolation) {
+        Object invalidValue = constraintViolation.getInvalidValue();
+        if (invalidValue == null) {
+            return "";
+        }
+        return invalidValue.toString();
     }
 }

@@ -7,7 +7,7 @@
 
 package com.shopbee.user.control.service.impl;
 
-import com.shopbee.user.control.exception.UserServiceException;
+import com.shopbee.common.exception.dto.ApiServiceException;
 import com.shopbee.user.control.mapper.AddressMapper;
 import com.shopbee.user.control.mapper.PhoneMapper;
 import com.shopbee.user.control.mapper.UserMapper;
@@ -82,7 +82,7 @@ public class UserServiceImpl implements UserService {
     public List<User> getUsers(String tenantId, Integer offset, Integer limit) {
         if (StringUtils.isBlank(tenantId)) {
             LOG.warn("Attempts to get users with empty tenantId");
-            throw UserServiceException.badRequest("tenantId must not be empty");
+            throw ApiServiceException.badRequest("tenantId must not be empty");
         }
 
         int validOffset = Optional.ofNullable(offset).orElse(DEFAULT_OFFSET);
@@ -264,7 +264,7 @@ public class UserServiceImpl implements UserService {
 
         if (Objects.isNull(address)) {
             LOG.warn("Attempts to update user address with non - existing address [{}]", addressId);
-            throw UserServiceException.notFound("Address not found");
+            throw ApiServiceException.notFound("Address not found");
         }
 
         addressMapper.updateAddress(createUserAddressRequest, address);
@@ -281,7 +281,7 @@ public class UserServiceImpl implements UserService {
 
         if (Objects.isNull(address)) {
             LOG.warn("Attempts to patch user address with non - existing address [{}]", addressId);
-            throw UserServiceException.notFound("Address not found");
+            throw ApiServiceException.notFound("Address not found");
         }
 
         addressMapper.patchAddress(patchUserAddressRequest, address);
@@ -323,7 +323,7 @@ public class UserServiceImpl implements UserService {
     private void validateCreateUsername(String tenantId, String username) {
         if (usersRepository.existedByUsername(tenantId, username)) {
             LOG.warn("Attempts to create user with existing username [{}]", username);
-            throw UserServiceException.conflict("User with username already exists");
+            throw ApiServiceException.conflict("User with username already exists");
         }
     }
 
@@ -371,8 +371,8 @@ public class UserServiceImpl implements UserService {
      *
      * @return the user service exception
      */
-    private UserServiceException emailExistsException() {
-        return UserServiceException.conflict("User with email already exists");
+    private ApiServiceException emailExistsException() {
+        return ApiServiceException.conflict("User with email already exists");
     }
 
     
@@ -382,8 +382,8 @@ public class UserServiceImpl implements UserService {
      *
      * @return the user not found exception
      */
-    private UserServiceException userNotFoundException() {
-        return UserServiceException.notFound("User not found");
+    private ApiServiceException userNotFoundException() {
+        return ApiServiceException.notFound("User not found");
     }
 
     /**
@@ -391,7 +391,7 @@ public class UserServiceImpl implements UserService {
      *
      * @return the user service exception
      */
-    private UserServiceException phoneExistsException() {
-        return UserServiceException.conflict("Phone already exists");
+    private ApiServiceException phoneExistsException() {
+        return ApiServiceException.conflict("Phone already exists");
     }
 }

@@ -7,27 +7,27 @@
 
 package com.shopbee.common.exception.dto;
 
-public class ViolationError extends Error {
+public class ValidationError extends Error {
 
-    private String field;
+    private String property;
     private String value;
 
-    public ViolationError() {
+    public ValidationError() {
         super();
     }
 
-    public ViolationError(String field, String value, String message) {
+    public ValidationError(String property, String value, String message) {
         super(message);
-        this.field = field;
+        this.property = property;
         this.value = value;
     }
 
-    public String getField() {
-        return field;
+    public String getProperty() {
+        return property;
     }
 
-    public void setField(String field) {
-        this.field = field;
+    public void setProperty(String property) {
+        this.property = property;
     }
 
     public String getValue() {

@@ -1,6 +1,6 @@
 package com.shopbee.user.control.service.impl;
 
-import com.shopbee.user.control.exception.UserServiceException;
+import com.shopbee.common.exception.dto.ApiServiceException;
 import com.shopbee.user.control.repository.UsersRepository;
 import com.shopbee.user.control.service.UserService;
 import io.quarkus.test.junit.QuarkusTest;
@@ -26,8 +26,8 @@ class UserServiceImplTest {
 
     @Test
     void getUsers_tenantIdEmpty_throwException() {
-        assertThrows(UserServiceException.class, () -> userService.getUsers(null, null, null));
-        assertThrows(UserServiceException.class, () -> userService.getUsers("", null, null));
+        assertThrows(ApiServiceException.class, () -> userService.getUsers(null, null, null));
+        assertThrows(ApiServiceException.class, () -> userService.getUsers("", null, null));
     }
 
     @Test

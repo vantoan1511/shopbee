@@ -7,7 +7,7 @@
 
 package com.shopbee.common.exception.mapper;
 
-import com.shopbee.common.exception.dto.ApiServiceException;
+import com.shopbee.common.exception.ApiServiceException;
 import com.shopbee.common.exception.dto.Error;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;

@@ -1,7 +1,7 @@
 package com.shopbee.user.boundary.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.shopbee.common.exception.dto.ApiServiceException;
+import com.shopbee.common.exception.ApiServiceException;
 import com.shopbee.user.control.service.UserService;
 import com.shopbee.user.entity.Address;
 import com.shopbee.user.model.CreateUserAddressRequest;

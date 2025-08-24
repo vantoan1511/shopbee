@@ -5,7 +5,7 @@
  * MIT License: https://mit-license.org
  */
 
-package com.shopbee.common.exception.dto;
+package com.shopbee.common.exception;
 
 import com.shopbee.common.StringFormatter;
 import jakarta.ws.rs.WebApplicationException;

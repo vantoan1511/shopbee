@@ -8,15 +8,16 @@
 package com.shopbee.user.control.repository;
 
 import com.shopbee.user.entity.User;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.util.List;
 
 /**
  * The type Users repository.
  */
 @ApplicationScoped
-public class UsersRepository implements PanacheRepositoryBase<User, String> {
+public class UserRepository implements PanacheRepositoryBase<User, String> {
 
     /**
      * Find all by tenantId.
@@ -24,8 +25,8 @@ public class UsersRepository implements PanacheRepositoryBase<User, String> {
      * @param tenantId the tenant id
      * @return the panache query
      */
-    public PanacheQuery<User> findAll(String tenantId) {
-        return find("tenantId", tenantId);
+    public List<User> findAll(String tenantId, int page, int size) {
+        return find("tenantId", tenantId).page(page, size).list();
     }
 
     /**

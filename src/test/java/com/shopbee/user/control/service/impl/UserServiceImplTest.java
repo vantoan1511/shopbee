@@ -1,28 +1,33 @@
 package com.shopbee.user.control.service.impl;
 
-import com.shopbee.common.exception.dto.ApiServiceException;
-import com.shopbee.user.control.repository.UsersRepository;
+import com.shopbee.common.exception.ApiServiceException;
+import com.shopbee.user.control.repository.AddressRepository;
+import com.shopbee.user.control.repository.PhoneRepository;
+import com.shopbee.user.control.repository.UserRepository;
 import com.shopbee.user.control.service.UserService;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-/*
- * UserServiceImplTest.java
- *
- * Copyright by shopbee-service, all rights reserved.
- * MIT License: https://mit-license.org
- */
 @QuarkusTest
 class UserServiceImplTest {
 
-    @Inject
-    private UserService userService;
+    @InjectMock
+    private UserRepository userRepository;
+
+    @InjectMock
+    private PhoneRepository phoneRepository;
+
+    @InjectMock
+    private AddressRepository addressRepository;
 
     @Inject
-    private UsersRepository usersRepository;
+    private UserService userService;
 
     @Test
     void getUsers_tenantIdEmpty_throwException() {
@@ -31,42 +36,9 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getUserById() {
-    }
+    void testDeleteUserAddress() {
+        userService.deleteUserAddress("test-tenant-id", "test-user-id", "test-address-id");
 
-    @Test
-    void createUser() {
-    }
-
-    @Test
-    void updateUserById() {
-    }
-
-    @Test
-    void patchUserById() {
-    }
-
-    @Test
-    void deleteUserById() {
-    }
-
-    @Test
-    void getUserAddresses() {
-    }
-
-    @Test
-    void createUserAddress() {
-    }
-
-    @Test
-    void updateUserAddress() {
-    }
-
-    @Test
-    void patchUserAddress() {
-    }
-
-    @Test
-    void deleteUserAddress() {
+        verify(addressRepository, times(1)).deleteByIdAndUserId("test-tenant-id", "test-user-id", "test-address-id");
     }
 }

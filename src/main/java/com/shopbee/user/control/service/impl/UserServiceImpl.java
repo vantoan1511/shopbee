@@ -7,13 +7,13 @@
 
 package com.shopbee.user.control.service.impl;
 
-import com.shopbee.common.exception.dto.ApiServiceException;
+import com.shopbee.common.exception.ApiServiceException;
 import com.shopbee.user.control.mapper.AddressMapper;
 import com.shopbee.user.control.mapper.PhoneMapper;
 import com.shopbee.user.control.mapper.UserMapper;
 import com.shopbee.user.control.repository.AddressRepository;
 import com.shopbee.user.control.repository.PhoneRepository;
-import com.shopbee.user.control.repository.UsersRepository;
+import com.shopbee.user.control.repository.UserRepository;
 import com.shopbee.user.control.service.UserService;
 import com.shopbee.user.entity.Phone;
 import com.shopbee.user.entity.PhoneId;
@@ -24,28 +24,25 @@ import com.shopbee.user.model.PatchUserAddressRequest;
 import com.shopbee.user.model.PatchUserByIdRequest;
 import com.shopbee.user.model.UpdateUserByIdRequest;
 import com.shopbee.user.model.User;
-import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * The type Users service.
- */
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 @ApplicationScoped
 public class UserServiceImpl implements UserService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
-    private static final int DEFAULT_LIMIT = 20;
-    private static final int DEFAULT_OFFSET = 0;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_PAGE_INDEX = 0;
 
-    private final UsersRepository usersRepository;
+    private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final PhoneRepository phoneRepository;
 
@@ -56,7 +53,7 @@ public class UserServiceImpl implements UserService {
     /**
      * Instantiates a new User service.
      *
-     * @param usersRepository   the users repository
+     * @param userRepository    the users repository
      * @param addressRepository the address repository
      * @param phoneRepository   the phone repository
      * @param userMapper        the user mapper
@@ -64,13 +61,13 @@ public class UserServiceImpl implements UserService {
      * @param phoneMapper       the phone mapper
      */
     @Inject
-    public UserServiceImpl(UsersRepository usersRepository,
+    public UserServiceImpl(UserRepository userRepository,
                            AddressRepository addressRepository,
                            PhoneRepository phoneRepository,
                            UserMapper userMapper,
                            AddressMapper addressMapper,
                            PhoneMapper phoneMapper) {
-        this.usersRepository = usersRepository;
+        this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.phoneRepository = phoneRepository;
         this.userMapper = userMapper;
@@ -81,28 +78,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getUsers(String tenantId, Integer offset, Integer limit) {
         if (StringUtils.isBlank(tenantId)) {
-            LOG.warn("Attempts to get users with empty tenantId");
             throw ApiServiceException.badRequest("tenantId must not be empty");
         }
 
-        int validOffset = Optional.ofNullable(offset).orElse(DEFAULT_OFFSET);
-        int validLimit = Optional.ofNullable(limit).orElse(DEFAULT_LIMIT);
+        int page = Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
+        int size = Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
 
-        LOG.info("Getting users with offset [{}] and limit [{}]...", validOffset, validLimit);
+        LOG.info("Getting users with page [{}] and size [{}]...", page, size);
 
-        List<com.shopbee.user.entity.User> users = usersRepository.findAll(tenantId)
-                .page(Page.of(validOffset, validLimit)).list();
+        List<com.shopbee.user.entity.User> foundUsers = userRepository.findAll(tenantId, page, size);
 
-        LOG.info("Got [{}] users", users.size());
+        LOG.info("Got [{}] users", foundUsers.size());
 
-        return userMapper.toUsers(users);
+        return userMapper.toUsers(foundUsers);
     }
 
     @Override
     public User getUserById(String tenantId, String userId) {
-        LOG.debug("Getting user by id [{}]...", userId);
+        LOG.debug("Getting user by id [{}]", userId);
 
-        User user = Optional.ofNullable(usersRepository.findById(tenantId, userId))
+        User user = Optional.ofNullable(userRepository.findById(tenantId, userId))
                 .map(userMapper::toUser)
                 .orElseThrow(this::userNotFoundException);
 
@@ -127,7 +122,7 @@ public class UserServiceImpl implements UserService {
             phone.setUser(user);
         }
 
-        usersRepository.persist(user);
+        userRepository.persist(user);
 
         LOG.debug("Created user with id [{}]", user.getId());
 
@@ -139,28 +134,7 @@ public class UserServiceImpl implements UserService {
     public void updateUserById(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
         LOG.debug("Updating user with id [{}]...", userId);
 
-        validateUpdateEmail(tenantId, userId, updateUserByIdRequest.getEmail());
-
-        com.shopbee.user.entity.User user = usersRepository.findById(tenantId, userId);
-
-        if (Objects.isNull(user)) {
-            LOG.warn("Attempts to update non - existing user [{}]", userId);
-            throw userNotFoundException();
-        }
-
-        PhoneId phoneId = phoneMapper.toPhone(updateUserByIdRequest.getPhone());
-        if (Objects.nonNull(phoneId)) {
-            Phone existingPhone = phoneRepository.findById(phoneId);
-            if (Objects.nonNull(existingPhone)) {
-                validateUpdatePhone(userId, existingPhone);
-            } else {
-                Phone phone = new Phone();
-                phone.setId(phoneId);
-                phone.setTenantId(tenantId);
-                phone.setUser(user);
-                user.setPhone(phone);
-            }
-        }
+        com.shopbee.user.entity.User user = findAndValidateUserForUpdate(tenantId, userId, updateUserByIdRequest.getEmail(), updateUserByIdRequest.getPhone());
 
         userMapper.updateUser(updateUserByIdRequest, user);
 
@@ -172,28 +146,7 @@ public class UserServiceImpl implements UserService {
     public void patchUserById(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
         LOG.debug("Patching user with id [{}]...", userId);
 
-        validateUpdateEmail(tenantId, userId, patchUserByIdRequest.getEmail());
-
-        com.shopbee.user.entity.User user = usersRepository.findById(tenantId, userId);
-
-        if (Objects.isNull(user)) {
-            LOG.warn("Attempts to patch non - existing user [{}]", userId);
-            throw userNotFoundException();
-        }
-
-        PhoneId phoneId = phoneMapper.toPhone(patchUserByIdRequest.getPhone());
-        if (Objects.nonNull(phoneId)) {
-            Phone phone = phoneRepository.findById(phoneId);
-            if (Objects.nonNull(phone)) {
-                validateUpdatePhone(userId, phone);
-            } else {
-                phone = new Phone();
-                phone.setId(phoneId);
-                phone.setTenantId(tenantId);
-                phone.setUser(user);
-                user.setPhone(phone);
-            }
-        }
+        com.shopbee.user.entity.User user = findAndValidateUserForUpdate(tenantId, userId, patchUserByIdRequest.getEmail(), patchUserByIdRequest.getPhone());
 
         userMapper.patchUser(patchUserByIdRequest, user);
 
@@ -205,14 +158,14 @@ public class UserServiceImpl implements UserService {
     public void deleteUserById(String tenantId, String userId) {
         LOG.debug("Deleting user with id [{}]...", userId);
 
-        com.shopbee.user.entity.User user = usersRepository.findById(tenantId, userId);
+        com.shopbee.user.entity.User user = userRepository.findById(tenantId, userId);
 
         if (Objects.isNull(user)) {
             LOG.warn("Attempts to delete non - existing user [{}]", userId);
             throw userNotFoundException();
         }
 
-        usersRepository.delete(user);
+        userRepository.delete(user);
 
         LOG.debug("Deleted user with id [{}]", userId);
     }
@@ -221,8 +174,8 @@ public class UserServiceImpl implements UserService {
     public List<Address> getUserAddresses(String tenantId, String userId, Integer offset, Integer limit) {
         LOG.debug("Getting user [{}] addresses with offset [{}] and limit [{}]...", userId, offset, limit);
 
-        int pageIndex = Optional.ofNullable(offset).orElse(DEFAULT_OFFSET);
-        int pageSize = Optional.ofNullable(limit).orElse(DEFAULT_LIMIT);
+        int pageIndex = Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
+        int pageSize = Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
 
         List<Address> addresses = addressMapper.toAddresses(addressRepository.findByUserId(tenantId, userId, pageIndex, pageSize));
 
@@ -236,7 +189,7 @@ public class UserServiceImpl implements UserService {
     public String createUserAddress(String tenantId, String userId, CreateUserAddressRequest createUserAddressRequest) {
         LOG.debug("Creating address for user [{}]...", userId);
 
-        com.shopbee.user.entity.User user = usersRepository.findById(tenantId, userId);
+        com.shopbee.user.entity.User user = userRepository.findById(tenantId, userId);
 
         if (Objects.isNull(user)) {
             LOG.warn("Attempts to create address for non - existing user [{}]", userId);
@@ -260,7 +213,7 @@ public class UserServiceImpl implements UserService {
     public void updateUserAddress(String tenantId, String userId, String addressId, CreateUserAddressRequest createUserAddressRequest) {
         LOG.debug("Updating address [{}] for user [{}]...", addressId, userId);
 
-        com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, addressId, userId);
+        com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, userId, addressId);
 
         if (Objects.isNull(address)) {
             LOG.warn("Attempts to update user address with non - existing address [{}]", addressId);
@@ -277,7 +230,7 @@ public class UserServiceImpl implements UserService {
     public void patchUserAddress(String tenantId, String userId, String addressId, PatchUserAddressRequest patchUserAddressRequest) {
         LOG.debug("Patching address [{}] for user [{}]...", addressId, userId);
 
-        com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, addressId, userId);
+        com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, userId, addressId);
 
         if (Objects.isNull(address)) {
             LOG.warn("Attempts to patch user address with non - existing address [{}]", addressId);
@@ -292,60 +245,60 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUserAddress(String tenantId, String userId, String addressId) {
-        LOG.debug("Deleting address [{}] for user [{}]...", addressId, userId);
+        LOG.debug("Deleting address id [{}] of user id [{}]", addressId, userId);
 
-        addressRepository.deleteById(addressId);
+        addressRepository.deleteByIdAndUserId(tenantId, userId, addressId);
 
-        LOG.debug("Deleted address with id [{}] for user [{}]", addressId, userId);
+        LOG.debug("Deleted address id [{}] of user id [{}]", addressId, userId);
     }
 
-    
+    private com.shopbee.user.entity.User findAndValidateUserForUpdate(String tenantId, String userId, String email, com.shopbee.user.model.Phone phoneRequest) {
+        validateUpdateEmail(tenantId, userId, email);
 
-    /**
-     * Validates the uniqueness of the email.
-     *
-     * @param tenantId the tenant id
-     * @param email    the email
-     */
+        com.shopbee.user.entity.User user = userRepository.findById(tenantId, userId);
+
+        if (Objects.isNull(user)) {
+            LOG.warn("Attempts to update non - existing user [{}]", userId);
+            throw userNotFoundException();
+        }
+
+        PhoneId phoneId = phoneMapper.toPhone(phoneRequest);
+        if (Objects.nonNull(phoneId)) {
+            Phone existingPhone = phoneRepository.findById(phoneId);
+            if (Objects.nonNull(existingPhone)) {
+                validateUpdatePhone(userId, existingPhone);
+            } else {
+                Phone phone = new Phone();
+                phone.setId(phoneId);
+                phone.setTenantId(tenantId);
+                phone.setUser(user);
+                user.setPhone(phone);
+            }
+        }
+        return user;
+    }
+
     private void validateCreateEmail(String tenantId, String email) {
-        if (usersRepository.existedByEmail(tenantId, email)) {
+        if (userRepository.existedByEmail(tenantId, email)) {
             LOG.warn("Attempts to create user with existing email [{}]", email);
             throw emailExistsException();
         }
     }
 
-    /**
-     * Validates the uniqueness of the username.
-     *
-     * @param tenantId the tenant id
-     * @param username the username
-     */
     private void validateCreateUsername(String tenantId, String username) {
-        if (usersRepository.existedByUsername(tenantId, username)) {
+        if (userRepository.existedByUsername(tenantId, username)) {
             LOG.warn("Attempts to create user with existing username [{}]", username);
             throw ApiServiceException.conflict("User with username already exists");
         }
     }
 
-    /**
-     * Validates the email update.
-     *
-     * @param tenantId the tenant id
-     * @param userId   the ID of the user
-     * @param email    the email to validate
-     */
     private void validateUpdateEmail(String tenantId, String userId, String email) {
-        if (usersRepository.existedByEmailExcludedById(tenantId, email, userId)) {
+        if (userRepository.existedByEmailExcludedById(tenantId, email, userId)) {
             LOG.warn("Attempts to update user with existing email [{}]", email);
             throw emailExistsException();
         }
     }
 
-    /**
-     * Validate create phone.
-     *
-     * @param phone the phone
-     */
     private void validateCreatePhone(Phone phone) {
         if (Objects.nonNull(phoneRepository.findById(phone.getId()))) {
             LOG.warn("Attempts to create user with existing phone [{}]", phone.getPhoneNumber());
@@ -353,12 +306,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    /**
-     * Validate update phone.
-     *
-     * @param userId the user id
-     * @param phone  the phone
-     */
     private void validateUpdatePhone(String userId, Phone phone) {
         if (!phone.getUser().getId().equals(userId)) {
             LOG.warn("Attempts to update user with existing phoneId [{}]", phone.getPhoneNumber());
@@ -366,31 +313,14 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    /**
-     * Email exists exception user service exception.
-     *
-     * @return the user service exception
-     */
     private ApiServiceException emailExistsException() {
         return ApiServiceException.conflict("User with email already exists");
     }
 
-    
-
-    /**
-     * Gets the user not found exception.
-     *
-     * @return the user not found exception
-     */
     private ApiServiceException userNotFoundException() {
         return ApiServiceException.notFound("User not found");
     }
 
-    /**
-     * Phone exists exception user service exception.
-     *
-     * @return the user service exception
-     */
     private ApiServiceException phoneExistsException() {
         return ApiServiceException.conflict("Phone already exists");
     }

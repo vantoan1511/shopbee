@@ -66,7 +66,7 @@ specFiles.each { specFile ->
                 dateLibrary                   : 'java8',
                 interfaceOnly                 : 'true',
                 useSwaggerAnnotations         : 'false',
-                returnResponse                : 'false',
+                returnResponse                : 'true',
                 useJakartaEe                  : 'true',
                 bigDecimalAsString            : 'true',
                 booleanGetterPrefix           : 'get',

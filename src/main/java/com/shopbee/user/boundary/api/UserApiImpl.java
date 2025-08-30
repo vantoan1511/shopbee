@@ -16,6 +16,7 @@ import com.shopbee.user.model.UpdateUserByIdRequest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+
 import java.net.URI;
 
 public class UserApiImpl implements UsersApi {

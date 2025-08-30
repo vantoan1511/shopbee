@@ -7,13 +7,14 @@
 
 package com.shopbee.user.control.service;
 
-import com.shopbee.user.model.Address;
+import com.shopbee.user.model.AddressDTO;
 import com.shopbee.user.model.CreateUserAddressRequest;
 import com.shopbee.user.model.CreateUserRequest;
 import com.shopbee.user.model.PatchUserAddressRequest;
 import com.shopbee.user.model.PatchUserByIdRequest;
 import com.shopbee.user.model.UpdateUserByIdRequest;
-import com.shopbee.user.model.User;
+import com.shopbee.user.model.UserDTO;
+
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public interface UserService {
      * @param limit    the maximum number of users to return
      * @return a list of users
      */
-    List<User> getUsers(String tenantId, Integer offset, Integer limit);
+    List<UserDTO> getUsers(String tenantId, Integer offset, Integer limit);
 
     /**
      * Retrieves a user by their ID.
@@ -38,7 +39,7 @@ public interface UserService {
      * @param userId   the ID of the user
      * @return the user with the specified ID
      */
-    User getUserById(String tenantId, String userId);
+    UserDTO getUserById(String tenantId, String userId);
 
     /**
      * Creates a new user.
@@ -84,7 +85,7 @@ public interface UserService {
      * @param limit    the maximum number of addresses to return
      * @return a list of addresses for the user
      */
-    List<Address> getUserAddresses(String tenantId, String userId, Integer offset, Integer limit);
+    List<AddressDTO> getUserAddresses(String tenantId, String userId, Integer offset, Integer limit);
 
     /**
      * Creates a new address for a user.

@@ -12,9 +12,6 @@ import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * The type Phone id.
- */
 @Embeddable
 public class PhoneId implements Serializable {
 

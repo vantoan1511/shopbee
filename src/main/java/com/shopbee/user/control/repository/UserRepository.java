@@ -36,4 +36,24 @@ public class UserRepository implements PanacheRepositoryBase<User, String> {
         return find("tenantId = ?1 AND email = ?2", tenantId, email).firstResult();
     }
 
+    public long countByEmail(String tenantId, String email) {
+        return count("tenantId = ?1 AND email = ?2", tenantId, email);
+    }
+
+    public long countByUsername(String tenantId, String username) {
+        return count("tenantId = ?1 AND username = ?2", tenantId, username);
+    }
+
+    public long countByPhone(String tenantId, String countryCode, String number) {
+        return count("tenantId = ?1 AND phone.id.countryCode = ?2 AND phone.id.number = ?3", tenantId, countryCode, number);
+    }
+
+    public long countByEmailExcludeUserId(String tenantId, String email, String excludeUserId) {
+        return count("tenantId = ?1 AND email = ?2 AND id <> ?3", tenantId, email, excludeUserId);
+    }
+
+    public long countByPhoneExcludeUserId(String tenantId, String countryCode, String number, String excludeUserId) {
+        return count("tenantId = ?1 AND phone.id.countryCode = ?2 AND phone.id.number = ?3 AND id <> ?4", tenantId, countryCode, number, excludeUserId);
+    }
+
 }

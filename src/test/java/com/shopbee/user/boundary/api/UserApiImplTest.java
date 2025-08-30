@@ -9,18 +9,19 @@ import com.shopbee.user.model.CreateUserRequest;
 import com.shopbee.user.model.PatchUserAddressRequest;
 import com.shopbee.user.model.PatchUserByIdRequest;
 import com.shopbee.user.model.UpdateUserByIdRequest;
-import com.shopbee.user.model.User;
+import com.shopbee.user.model.UserDTO;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import static com.shopbee.common.TestUtils.getMockData;
 import static io.restassured.RestAssured.given;
@@ -82,7 +83,7 @@ class UserApiImplTest {
     void getUsers_success() {
         int offset = 0;
         int limit = 5;
-        List<User> users = getMockUsers(offset, limit);
+        List<UserDTO> users = getMockUsers(offset, limit);
         when(userService.getUsers(SHOPBEE, offset, limit)).thenReturn(users);
         given()
                 .when()
@@ -246,7 +247,7 @@ class UserApiImplTest {
      */
     @Test
     void getUserById() {
-        User user = getMockUsers(0, 1).get(0);
+        UserDTO user = getMockUsers(0, 1).get(0);
         when(userService.getUserById(SHOPBEE, user.getId())).thenReturn(user);
         given()
                 .when()
@@ -356,8 +357,8 @@ class UserApiImplTest {
      * @param limit  the limit
      * @return the mock users
      */
-    private List<User> getMockUsers(int offset, int limit) {
-        List<User> users = getMockData(USERS_JSON, new TypeReference<>() {
+    private List<UserDTO> getMockUsers(int offset, int limit) {
+        List<UserDTO> users = getMockData(USERS_JSON, new TypeReference<>() {
         });
         return users.stream().skip(offset).limit(limit).toList();
     }

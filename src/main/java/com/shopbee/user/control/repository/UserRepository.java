@@ -13,75 +13,27 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
 
-/**
- * The type Users repository.
- */
 @ApplicationScoped
 public class UserRepository implements PanacheRepositoryBase<User, String> {
 
-    /**
-     * Find all by tenantId.
-     *
-     * @param tenantId the tenant id
-     * @return the panache query
-     */
     public List<User> findAll(String tenantId, int page, int size) {
         return find("tenantId", tenantId).page(page, size).list();
     }
 
-    /**
-     * Find by id optional.
-     *
-     * @param tenantId the tenant id
-     * @param id       the id
-     * @return the optional
-     */
     public User findById(String tenantId, String id) {
         return find("tenantId = ?1 AND id = ?2", tenantId, id).firstResult();
     }
 
-    /**
-     * Existed by email excluded by id boolean.
-     *
-     * @param tenantId the tenant id
-     * @param email    the email
-     * @param id       the id
-     * @return the boolean
-     */
-    public boolean existedByEmailExcludedById(String tenantId, String email, String id) {
-        return count("tenantId = ?1 AND email = ?2 AND id != ?3", tenantId, email, id) > 0;
+    public User findByIdAndEmail(String tenantId, String id, String email) {
+        return find("tenantId = ?1 AND id = ?2 AND email = ?3", tenantId, id, email).firstResult();
     }
 
-    /**
-     * Existed by id boolean.
-     *
-     * @param id the id
-     * @return the boolean
-     */
-    public boolean existedById(String id) {
-        return count("id", id) > 0;
+    public User findByUsername(String tenantId, String username) {
+        return find("tenantId = ?1 AND username = ?2", tenantId, username).firstResult();
     }
 
-    /**
-     * Existed by username boolean.
-     *
-     * @param tenantId the tenant id
-     * @param username the username
-     * @return the boolean
-     */
-    public boolean existedByUsername(String tenantId, String username) {
-        return count("tenantId = ?1 AND username = ?2", tenantId, username) > 0;
-    }
-
-    /**
-     * Existed by email boolean.
-     *
-     * @param tenantId the tenant id
-     * @param email    the email
-     * @return the boolean
-     */
-    public boolean existedByEmail(String tenantId, String email) {
-        return count("tenantId = ?1 AND email = ?2", tenantId, email) > 0;
+    public User findByEmail(String tenantId, String email) {
+        return find("tenantId = ?1 AND email = ?2", tenantId, email).firstResult();
     }
 
 }

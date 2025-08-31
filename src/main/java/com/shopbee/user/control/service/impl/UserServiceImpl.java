@@ -8,12 +8,9 @@
 package com.shopbee.user.control.service.impl;
 
 import com.shopbee.common.exception.ApiServiceException;
-import com.shopbee.user.control.UserValidator;
 import com.shopbee.user.control.mapper.AddressMapper;
-import com.shopbee.user.control.mapper.PhoneMapper;
 import com.shopbee.user.control.mapper.UserMapper;
 import com.shopbee.user.control.repository.AddressRepository;
-import com.shopbee.user.control.repository.PhoneRepository;
 import com.shopbee.user.control.repository.UserRepository;
 import com.shopbee.user.control.service.UserService;
 import com.shopbee.user.entity.User;
@@ -43,32 +40,26 @@ public class UserServiceImpl implements UserService {
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int DEFAULT_PAGE_INDEX = 0;
 
-    private final UserValidator userValidator;
-
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
-    private final PhoneRepository phoneRepository;
 
     private final UserMapper userMapper;
     private final AddressMapper addressMapper;
-    private final PhoneMapper phoneMapper;
 
     @Inject
-    public UserServiceImpl(UserValidator userValidator,
-                           UserRepository userRepository,
+    public UserServiceImpl(UserRepository userRepository,
                            AddressRepository addressRepository,
-                           PhoneRepository phoneRepository,
                            UserMapper userMapper,
-                           AddressMapper addressMapper,
-                           PhoneMapper phoneMapper) {
-        this.userValidator = userValidator;
+                           AddressMapper addressMapper) {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
-        this.phoneRepository = phoneRepository;
         this.userMapper = userMapper;
         this.addressMapper = addressMapper;
-        this.phoneMapper = phoneMapper;
     }
+
+    // =================================================================================================================
+    // PUBLIC API
+    // =================================================================================================================
 
     @Override
     public List<UserDTO> getUsers(String tenantId, Integer offset, Integer limit) {
@@ -76,7 +67,7 @@ public class UserServiceImpl implements UserService {
         int size = Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
 
         LOG.info("Getting users with page [{}] and size [{}]...", page, size);
-        List<com.shopbee.user.entity.User> foundUsers = userRepository.findAll(tenantId, page, size);
+        List<User> foundUsers = userRepository.findAll(tenantId, page, size);
         LOG.info("Got [{}] users", foundUsers.size());
 
         return userMapper.toUsers(foundUsers);
@@ -85,27 +76,25 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO getUserById(String tenantId, String userId) {
         LOG.debug("Getting user by id [{}]", userId);
-        User foundUser = userRepository.findById(tenantId, userId);
-        UserDTO userDTO = Optional.ofNullable(foundUser)
-                .map(userMapper::toUserDTO)
-                .orElseThrow(this::userNotFoundException);
-        LOG.debug("Got user [id={}, username={}, status={}]", userDTO.getId(), userDTO.getUsername(), userDTO.getStatus());
-        return userDTO;
+        User user = findUserByUserId(tenantId, userId);
+        LOG.debug("Got user [id={}, username={}, status={}]", user.getId(), user.getUsername(), user.getStatus());
+        return userMapper.toUserDTO(user);
     }
 
     @Override
     @Transactional
     public String createUser(String tenantId, CreateUserRequest createUserRequest) {
-        userValidator.validateCreateUserRequest(tenantId, createUserRequest);
+        validateCreateUserRequest(tenantId, createUserRequest);
+
         User user = userMapper.toUser(tenantId, createUserRequest);
-        userRepository.persist(user);
-        return user.getId();
+
+        return saveUser(user);
     }
 
     @Override
     @Transactional
     public void updateUserById(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
-        User user = Optional.ofNullable(userRepository.findById(tenantId, userId)).orElseThrow(this::userNotFoundException);
+        User user = findUserByUserId(tenantId, userId);
 
         validateUpdateUserRequest(tenantId, userId, updateUserByIdRequest);
 
@@ -115,6 +104,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void patchUserById(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
+        User user = findUserByUserId(tenantId, userId);
+
+        validatePatchUserRequest(tenantId, userId, patchUserByIdRequest);
+
+        userMapper.patchUser(patchUserByIdRequest, user, tenantId);
     }
 
     @Override
@@ -122,12 +116,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUserById(String tenantId, String userId) {
         LOG.debug("Deleting user with id [{}]...", userId);
 
-        com.shopbee.user.entity.User user = userRepository.findById(tenantId, userId);
-
-        if (Objects.isNull(user)) {
-            LOG.warn("Attempts to delete non - existing user [{}]", userId);
-            throw userNotFoundException();
-        }
+        User user = findUserByUserId(tenantId, userId);
 
         userRepository.delete(user);
 
@@ -151,7 +140,7 @@ public class UserServiceImpl implements UserService {
 
         if (Objects.isNull(user)) {
             LOG.warn("Attempts to create address for non - existing user [{}]", userId);
-            throw userNotFoundException();
+            throw userNotFoundException(userId);
         }
 
         com.shopbee.user.entity.Address address = addressMapper.toAddress(tenantId, createUserAddressRequest);
@@ -210,18 +199,78 @@ public class UserServiceImpl implements UserService {
         LOG.debug("Deleted address id [{}] of user id [{}]", addressId, userId);
     }
 
+    // =================================================================================================================
+    // PRIVATE IMPLEMENTATION
+    // =================================================================================================================
+
+    private User findUserByUserId(String tenantId, String userId) {
+        User foundUser = userRepository.findById(tenantId, userId);
+
+        if (foundUser == null) {
+            LOG.warn("User [{}] not found", userId);
+            throw userNotFoundException(userId);
+        }
+
+        return foundUser;
+    }
+
+    private void validateCreateUserRequest(String tenantId, CreateUserRequest createUserRequest) {
+        validateNewUsername(tenantId, createUserRequest.getUsername());
+        validateNewEmail(tenantId, createUserRequest.getEmail());
+    }
+
+    private void validateNewUsername(String tenantId, String username) {
+        if (isUsernameExisted(tenantId, username)) {
+            throw ApiServiceException.conflict("Username [{}] already exists", username);
+        }
+    }
+
+    private boolean isUsernameExisted(String tenantId, String username) {
+        return userRepository.countByUsername(tenantId, username) > 0;
+    }
+
+    private void validateNewEmail(String tenantId, String email) {
+        if (isEmailExisted(tenantId, email)) {
+            throw emailExistedException(email);
+        }
+    }
+
+    private boolean isEmailExisted(String tenantId, String email) {
+        return userRepository.countByEmail(tenantId, email) > 0;
+    }
+
+    private String saveUser(User user) {
+        try {
+            userRepository.persist(user);
+            return user.getId();
+        } catch (Exception e) {
+            String message = "Failed to save user. Reason: {}";
+            LOG.warn(message, e.getMessage());
+            throw ApiServiceException.internalServerError(message, e.getMessage());
+        }
+    }
+
     private void validateUpdateUserRequest(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
         validateUpdateEmail(tenantId, userId, updateUserByIdRequest.getEmail());
         validateUpdatePhone(tenantId, userId, updateUserByIdRequest.getPhone());
     }
 
-    private void validateUpdateEmail(String tenantId, String userId, String email) {
-        if (isEmailBelongedToOtherUser(tenantId, userId, email)) {
-            throw emailExistsException();
+    private void validatePatchUserRequest(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
+        if (patchUserByIdRequest.getEmail() != null) {
+            validateUpdateEmail(tenantId, userId, patchUserByIdRequest.getEmail());
+        }
+        if (patchUserByIdRequest.getPhone() != null) {
+            validateUpdatePhone(tenantId, userId, patchUserByIdRequest.getPhone());
         }
     }
 
-    private boolean isEmailBelongedToOtherUser(String tenantId, String userId, String email) {
+    private void validateUpdateEmail(String tenantId, String userId, String email) {
+        if (isEmailBelongedToAnotherUser(tenantId, userId, email)) {
+            throw emailExistedException(email);
+        }
+    }
+
+    private boolean isEmailBelongedToAnotherUser(String tenantId, String userId, String email) {
         return userRepository.countByEmailExcludeUserId(tenantId, email, userId) > 0;
     }
 
@@ -236,25 +285,25 @@ public class UserServiceImpl implements UserService {
                 throw ApiServiceException.badRequest("Phone number is required");
             }
 
-            if (isPhoneBelongedToOtherUser(tenantId, userId, countryCode, number)) {
-                throw phoneExistsException();
+            if (isPhoneBelongedToAnotherUser(tenantId, userId, countryCode, number)) {
+                throw phoneExistedException(countryCode, number);
             }
         }
     }
 
-    private boolean isPhoneBelongedToOtherUser(String tenantId, String userId, String countryCode, String number) {
+    private boolean isPhoneBelongedToAnotherUser(String tenantId, String userId, String countryCode, String number) {
         return userRepository.countByPhoneExcludeUserId(tenantId, countryCode, number, userId) > 0;
     }
 
-    private ApiServiceException userNotFoundException() {
-        return ApiServiceException.notFound("User not found");
+    private ApiServiceException userNotFoundException(String userId) {
+        return ApiServiceException.notFound("User [{}] not found", userId);
     }
 
-    private ApiServiceException emailExistsException() {
-        return ApiServiceException.conflict("User with email already exists");
+    private ApiServiceException emailExistedException(String email) {
+        return ApiServiceException.conflict("Email [{}] linked to another user", email);
     }
 
-    private ApiServiceException phoneExistsException() {
-        return ApiServiceException.conflict("Phone already exists");
+    private ApiServiceException phoneExistedException(String countryCode, String number) {
+        return ApiServiceException.conflict("Phone [{}{}] linked to another user", countryCode, number);
     }
 }

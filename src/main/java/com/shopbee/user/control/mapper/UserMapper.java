@@ -44,12 +44,11 @@ public interface UserMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", ignore = true)
-    @Mapping(target = "phone", ignore = true)
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "mainAddress", ignore = true)
-    void patchUser(PatchUserByIdRequest patchUserByIdRequest, @MappingTarget User user);
+    void patchUser(PatchUserByIdRequest patchUserByIdRequest, @MappingTarget User user, @Context String tenantId);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     @Mapping(target = "id", ignore = true)

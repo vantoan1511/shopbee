@@ -107,25 +107,7 @@ public class UserServiceImpl implements UserService {
     public void updateUserById(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
         User user = Optional.ofNullable(userRepository.findById(tenantId, userId)).orElseThrow(this::userNotFoundException);
 
-        if (userRepository.countByEmailExcludeUserId(tenantId, updateUserByIdRequest.getEmail(), userId) > 0) {
-            throw emailExistsException();
-        }
-        PhoneDTO phoneDTO = updateUserByIdRequest.getPhone();
-        if (phoneDTO != null) {
-            String countryCode = phoneDTO.getCountryCode();
-            if (StringUtils.isBlank(countryCode)) {
-                throw ApiServiceException.badRequest("Country code is required");
-            }
-            String number = phoneDTO.getNumber();
-            if (StringUtils.isBlank(number)) {
-                throw ApiServiceException.badRequest("Phone number is required");
-            }
-
-            long countByPhone = userRepository.countByPhoneExcludeUserId(tenantId, countryCode, number, userId);
-            if (countByPhone > 0) {
-                throw phoneExistsException();
-            }
-        }
+        validateUpdateUserRequest(tenantId, userId, updateUserByIdRequest);
 
         userMapper.updateUser(updateUserByIdRequest, user, tenantId);
     }
@@ -228,12 +210,48 @@ public class UserServiceImpl implements UserService {
         LOG.debug("Deleted address id [{}] of user id [{}]", addressId, userId);
     }
 
-    private ApiServiceException emailExistsException() {
-        return ApiServiceException.conflict("User with email already exists");
+    private void validateUpdateUserRequest(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
+        validateUpdateEmail(tenantId, userId, updateUserByIdRequest.getEmail());
+        validateUpdatePhone(tenantId, userId, updateUserByIdRequest.getPhone());
+    }
+
+    private void validateUpdateEmail(String tenantId, String userId, String email) {
+        if (isEmailBelongedToOtherUser(tenantId, userId, email)) {
+            throw emailExistsException();
+        }
+    }
+
+    private boolean isEmailBelongedToOtherUser(String tenantId, String userId, String email) {
+        return userRepository.countByEmailExcludeUserId(tenantId, email, userId) > 0;
+    }
+
+    private void validateUpdatePhone(String tenantId, String userId, PhoneDTO phoneDTO) {
+        if (phoneDTO != null) {
+            String countryCode = phoneDTO.getCountryCode();
+            if (StringUtils.isBlank(countryCode)) {
+                throw ApiServiceException.badRequest("Country code is required");
+            }
+            String number = phoneDTO.getNumber();
+            if (StringUtils.isBlank(number)) {
+                throw ApiServiceException.badRequest("Phone number is required");
+            }
+
+            if (isPhoneBelongedToOtherUser(tenantId, userId, countryCode, number)) {
+                throw phoneExistsException();
+            }
+        }
+    }
+
+    private boolean isPhoneBelongedToOtherUser(String tenantId, String userId, String countryCode, String number) {
+        return userRepository.countByPhoneExcludeUserId(tenantId, countryCode, number, userId) > 0;
     }
 
     private ApiServiceException userNotFoundException() {
         return ApiServiceException.notFound("User not found");
+    }
+
+    private ApiServiceException emailExistsException() {
+        return ApiServiceException.conflict("User with email already exists");
     }
 
     private ApiServiceException phoneExistsException() {

@@ -10,6 +10,8 @@ package com.shopbee.user.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 
+import java.util.Objects;
+
 @MappedSuperclass
 public abstract class AbstractEntity {
 
@@ -22,5 +24,16 @@ public abstract class AbstractEntity {
 
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AbstractEntity that)) return false;
+        return Objects.equals(tenantId, that.tenantId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(tenantId);
     }
 }

@@ -113,35 +113,34 @@ public class UserServiceImpl implements UserService {
         }
         PhoneDTO phoneDTO = updateUserByIdRequest.getPhone();
         if (phoneDTO != null) {
-            if (StringUtils.isBlank(phoneDTO.getCountryCode())) {
+            String countryCode = phoneDTO.getCountryCode();
+            if (StringUtils.isBlank(countryCode)) {
                 throw ApiServiceException.badRequest("Country code is required");
             }
-            if (StringUtils.isBlank(phoneDTO.getNumber())) {
+            String number = phoneDTO.getNumber();
+            if (StringUtils.isBlank(number)) {
                 throw ApiServiceException.badRequest("Phone number is required");
             }
 
-            long countByPhone = userRepository.countByPhoneExcludeUserId(tenantId, phoneDTO.getCountryCode(), phoneDTO.getNumber(), userId);
+            long countByPhone = userRepository.countByPhoneExcludeUserId(tenantId, countryCode, number, userId);
             if (countByPhone > 0) {
                 throw phoneExistsException();
             }
+
+
+        }
+
+        Phone phone = phoneMapper.toPhone(phoneDTO, tenantId);
+        if (phone == null || !phone.equals(user.getPhone())) {
+            user.setPhone(phone);
         }
 
         userMapper.updateUser(updateUserByIdRequest, user);
-
-        Phone phone = user.getPhone();
-        if (phone != null) {
-            phone.setUser(user);
-            phone.setTenantId(tenantId);
-        }
     }
 
     @Override
     @Transactional
     public void patchUserById(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
-//        LOG.debug("Patching user with id [{}]...", userId);
-//        com.shopbee.user.entity.User user = findAndValidateUserForUpdate(tenantId, userId, patchUserByIdRequest.getEmail(), patchUserByIdRequest.getPhone());
-//        userMapper.patchUser(patchUserByIdRequest, user);
-//        LOG.debug("Patched user with id [{}]", user.getId());
     }
 
     @Override

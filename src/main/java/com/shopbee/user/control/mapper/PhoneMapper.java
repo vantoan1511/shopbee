@@ -9,6 +9,7 @@ package com.shopbee.user.control.mapper;
 
 import com.shopbee.user.entity.Phone;
 import com.shopbee.user.model.PhoneDTO;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -22,5 +23,6 @@ public interface PhoneMapper {
     PhoneDTO toPhoneDTO(Phone phone);
 
     @Mapping(target = "id", source = "phoneDTO")
-    Phone toPhone(PhoneDTO phoneDTO);
+    @Mapping(target = "tenantId", expression = "java(tenantId)")
+    Phone toPhone(PhoneDTO phoneDTO, @Context String tenantId);
 }

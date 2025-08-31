@@ -14,6 +14,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import java.util.Objects;
+
 /**
  * The type Phone.
  */
@@ -52,5 +54,17 @@ public class Phone extends AbstractEntity {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Phone phone)) return false;
+        if (!super.equals(o)) return false;
+        return Objects.equals(id, phone.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id);
     }
 }

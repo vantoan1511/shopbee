@@ -21,11 +21,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * The type User.
@@ -183,6 +184,9 @@ public class User extends AbstractEntity {
     }
 
     public void setPhone(Phone phone) {
+        if (phone != null) {
+            phone.setUser(this);
+        }
         this.phone = phone;
     }
 

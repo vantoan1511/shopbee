@@ -57,5 +57,6 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "mainAddress", ignore = true)
+    @Mapping(target = "phone", ignore = true)
     void updateUser(UpdateUserByIdRequest updateUserByIdRequest, @MappingTarget User user);
 }

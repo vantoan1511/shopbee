@@ -28,9 +28,6 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-/**
- * The type User.
- */
 @Entity
 @Table(name = "shopbee_user", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"username", "tenant_id"}),
@@ -184,32 +181,23 @@ public class User extends AbstractEntity {
     }
 
     public void setPhone(Phone phone) {
+        if (phone == null || !phone.equals(this.phone)) {
+            this.phone = phone;
+        }
         if (phone != null) {
             phone.setUser(this);
         }
-        this.phone = phone;
     }
 
-    /**
-     * Add address.
-     *
-     * @param address the address
-     */
     public void addAddress(Address address) {
         addresses.add(address);
         address.setUser(this);
     }
 
-    /**
-     * The enum Gender.
-     */
     public enum Gender {
         MALE, FEMALE, OTHER;
     }
 
-    /**
-     * The enum User status.
-     */
     public enum Status {
         ACTIVE, INACTIVE, SUSPENDED
     }

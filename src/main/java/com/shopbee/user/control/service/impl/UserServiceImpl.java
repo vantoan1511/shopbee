@@ -16,7 +16,6 @@ import com.shopbee.user.control.repository.AddressRepository;
 import com.shopbee.user.control.repository.PhoneRepository;
 import com.shopbee.user.control.repository.UserRepository;
 import com.shopbee.user.control.service.UserService;
-import com.shopbee.user.entity.Phone;
 import com.shopbee.user.entity.User;
 import com.shopbee.user.model.AddressDTO;
 import com.shopbee.user.model.CreateUserAddressRequest;
@@ -126,16 +125,9 @@ public class UserServiceImpl implements UserService {
             if (countByPhone > 0) {
                 throw phoneExistsException();
             }
-
-
         }
 
-        Phone phone = phoneMapper.toPhone(phoneDTO, tenantId);
-        if (phone == null || !phone.equals(user.getPhone())) {
-            user.setPhone(phone);
-        }
-
-        userMapper.updateUser(updateUserByIdRequest, user);
+        userMapper.updateUser(updateUserByIdRequest, user, tenantId);
     }
 
     @Override

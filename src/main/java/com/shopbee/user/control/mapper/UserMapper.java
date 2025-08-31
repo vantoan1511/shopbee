@@ -13,6 +13,7 @@ import com.shopbee.user.model.PatchUserByIdRequest;
 import com.shopbee.user.model.UpdateUserByIdRequest;
 import com.shopbee.user.model.UserDTO;
 import org.mapstruct.BeanMapping;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -57,6 +58,5 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "mainAddress", ignore = true)
-    @Mapping(target = "phone", ignore = true)
-    void updateUser(UpdateUserByIdRequest updateUserByIdRequest, @MappingTarget User user);
+    void updateUser(UpdateUserByIdRequest updateUserByIdRequest, @MappingTarget User user, @Context String tenantId);
 }

@@ -26,11 +26,7 @@ import java.util.List;
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AddressMapper {
 
-    List<AddressDTO> toAddresses(List<Address> source);
-
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "type", qualifiedByName = "mapAddressTypeToStringValue")
-    Address toAddress(AddressDTO source);
+    List<AddressDTO> toAddressesDto(List<Address> source);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)

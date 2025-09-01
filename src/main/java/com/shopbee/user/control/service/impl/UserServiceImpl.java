@@ -13,6 +13,7 @@ import com.shopbee.user.control.mapper.UserMapper;
 import com.shopbee.user.control.repository.AddressRepository;
 import com.shopbee.user.control.repository.UserRepository;
 import com.shopbee.user.control.service.UserService;
+import com.shopbee.user.entity.Address;
 import com.shopbee.user.entity.User;
 import com.shopbee.user.model.AddressDTO;
 import com.shopbee.user.model.CreateUserAddressRequest;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -63,27 +63,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDTO> getUsers(String tenantId, Integer offset, Integer limit) {
+        LOG.info("Getting users with offset [{}] and limit [{}]", offset, limit);
+
         int page = Optional.ofNullable(offset).orElse(DEFAULT_PAGE_INDEX);
         int size = Optional.ofNullable(limit).orElse(DEFAULT_PAGE_SIZE);
 
-        LOG.info("Getting users with page [{}] and size [{}]...", page, size);
         List<User> foundUsers = userRepository.findAll(tenantId, page, size);
-        LOG.info("Got [{}] users", foundUsers.size());
 
         return userMapper.toUsers(foundUsers);
     }
 
     @Override
     public UserDTO getUserById(String tenantId, String userId) {
-        LOG.debug("Getting user by id [{}]", userId);
+        LOG.info("Getting user by id [{}]", userId);
+
         User user = findUserByUserId(tenantId, userId);
-        LOG.debug("Got user [id={}, username={}, status={}]", user.getId(), user.getUsername(), user.getStatus());
+
         return userMapper.toUserDTO(user);
     }
 
     @Override
     @Transactional
     public String createUser(String tenantId, CreateUserRequest createUserRequest) {
+        LOG.info("Creating new user with username [{}]", createUserRequest.getUsername());
+
         validateCreateUserRequest(tenantId, createUserRequest);
 
         User user = userMapper.toUser(tenantId, createUserRequest);
@@ -94,6 +97,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateUserById(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
+        LOG.info("Updating user with id [{}]", userId);
+
         User user = findUserByUserId(tenantId, userId);
 
         validateUpdateUserRequest(tenantId, userId, updateUserByIdRequest);
@@ -104,6 +109,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void patchUserById(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
+        LOG.info("Patching user with id [{}]", userId);
+
         User user = findUserByUserId(tenantId, userId);
 
         validatePatchUserRequest(tenantId, userId, patchUserByIdRequest);
@@ -114,89 +121,60 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUserById(String tenantId, String userId) {
-        LOG.debug("Deleting user with id [{}]...", userId);
+        LOG.info("Deleting user with id [{}]", userId);
 
         User user = findUserByUserId(tenantId, userId);
 
         userRepository.delete(user);
-
-        LOG.debug("Deleted user with id [{}]", userId);
     }
 
     @Override
     public List<AddressDTO> getUserAddresses(String tenantId, String userId, Integer offset, Integer limit) {
-        LOG.debug("Getting user [{}] addresses with offset [{}] and limit [{}]...", userId, offset, limit);
-        List<AddressDTO> addresses = addressMapper.toAddresses(addressRepository.findByUserId(tenantId, userId));
-        LOG.debug("Got [{}] addresses for user [{}]", addresses.size(), userId);
-        return addresses;
+        LOG.info("Getting addresses of user [{}] with offset [{}] and limit [{}]", userId, offset, limit);
+
+        List<Address> foundAddresses = addressRepository.findByUserId(tenantId, userId);
+
+        return addressMapper.toAddressesDto(foundAddresses);
     }
 
     @Override
     @Transactional
     public String createUserAddress(String tenantId, String userId, CreateUserAddressRequest createUserAddressRequest) {
-        LOG.debug("Creating address for user [{}]...", userId);
+        LOG.info("Creating new address for user [{}]", userId);
 
-        com.shopbee.user.entity.User user = userRepository.findById(tenantId, userId);
+        Address address = addressMapper.toAddress(tenantId, createUserAddressRequest);
 
-        if (Objects.isNull(user)) {
-            LOG.warn("Attempts to create address for non - existing user [{}]", userId);
-            throw userNotFoundException(userId);
-        }
-
-        com.shopbee.user.entity.Address address = addressMapper.toAddress(tenantId, createUserAddressRequest);
-
-        user.addAddress(address);
-
-        addressRepository.persist(address);
-
-        String addressId = address.getId();
-        LOG.debug("Created address with id [{}] for user [{}]", addressId, userId);
-
-        return addressId;
+        return saveAndAddAddressToUser(tenantId, userId, address);
     }
 
     @Override
     @Transactional
     public void updateUserAddress(String tenantId, String userId, String addressId, CreateUserAddressRequest createUserAddressRequest) {
-        LOG.debug("Updating address [{}] for user [{}]...", addressId, userId);
+        LOG.info("Updating address [{}] for user [{}]", addressId, userId);
 
-        com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, userId, addressId);
-
-        if (Objects.isNull(address)) {
-            LOG.warn("Attempts to update user address with non - existing address [{}]", addressId);
-            throw ApiServiceException.notFound("Address not found");
-        }
+        Address address = findAddressByUserIdAndAddressId(tenantId, userId, addressId);
 
         addressMapper.updateAddress(createUserAddressRequest, address);
-
-        LOG.debug("Updated address with id [{}] for user [{}]", addressId, userId);
     }
 
     @Override
     @Transactional
     public void patchUserAddress(String tenantId, String userId, String addressId, PatchUserAddressRequest patchUserAddressRequest) {
-        LOG.debug("Patching address [{}] for user [{}]...", addressId, userId);
+        LOG.debug("Patching address [{}] for user [{}]", addressId, userId);
 
-        com.shopbee.user.entity.Address address = addressRepository.findByIdAndUserId(tenantId, userId, addressId);
-
-        if (Objects.isNull(address)) {
-            LOG.warn("Attempts to patch user address with non - existing address [{}]", addressId);
-            throw ApiServiceException.notFound("Address not found");
-        }
+        Address address = findAddressByUserIdAndAddressId(tenantId, userId, addressId);
 
         addressMapper.patchAddress(patchUserAddressRequest, address);
-
-        LOG.debug("Patched address with id [{}] for user [{}]", addressId, userId);
     }
 
     @Override
     @Transactional
     public void deleteUserAddress(String tenantId, String userId, String addressId) {
-        LOG.debug("Deleting address id [{}] of user id [{}]", addressId, userId);
+        LOG.debug("Deleting address [{}] of user [{}]", addressId, userId);
 
-        addressRepository.deleteByIdAndUserId(tenantId, userId, addressId);
+        User user = findUserByUserId(tenantId, userId);
 
-        LOG.debug("Deleted address id [{}] of user id [{}]", addressId, userId);
+        user.removeAddress(addressId);
     }
 
     // =================================================================================================================
@@ -214,9 +192,34 @@ public class UserServiceImpl implements UserService {
         return foundUser;
     }
 
+    private Address findAddressByUserIdAndAddressId(String tenantId, String userId, String addressId) {
+        Address address = addressRepository.findByIdAndUserId(tenantId, userId, addressId);
+
+        if (address == null) {
+            LOG.warn("Address [{}] not found", addressId);
+            throw ApiServiceException.notFound("Address [{}] not found", addressId);
+        }
+
+        return address;
+    }
+
     private void validateCreateUserRequest(String tenantId, CreateUserRequest createUserRequest) {
         validateNewUsername(tenantId, createUserRequest.getUsername());
         validateNewEmail(tenantId, createUserRequest.getEmail());
+    }
+
+    private void validateUpdateUserRequest(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
+        validateUpdateEmail(tenantId, userId, updateUserByIdRequest.getEmail());
+        validateUpdatePhone(tenantId, userId, updateUserByIdRequest.getPhone());
+    }
+
+    private void validatePatchUserRequest(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
+        if (patchUserByIdRequest.getEmail() != null) {
+            validateUpdateEmail(tenantId, userId, patchUserByIdRequest.getEmail());
+        }
+        if (patchUserByIdRequest.getPhone() != null) {
+            validateUpdatePhone(tenantId, userId, patchUserByIdRequest.getPhone());
+        }
     }
 
     private void validateNewUsername(String tenantId, String username) {
@@ -237,31 +240,6 @@ public class UserServiceImpl implements UserService {
 
     private boolean isEmailExisted(String tenantId, String email) {
         return userRepository.countByEmail(tenantId, email) > 0;
-    }
-
-    private String saveUser(User user) {
-        try {
-            userRepository.persist(user);
-            return user.getId();
-        } catch (Exception e) {
-            String message = "Failed to save user. Reason: {}";
-            LOG.warn(message, e.getMessage());
-            throw ApiServiceException.internalServerError(message, e.getMessage());
-        }
-    }
-
-    private void validateUpdateUserRequest(String tenantId, String userId, UpdateUserByIdRequest updateUserByIdRequest) {
-        validateUpdateEmail(tenantId, userId, updateUserByIdRequest.getEmail());
-        validateUpdatePhone(tenantId, userId, updateUserByIdRequest.getPhone());
-    }
-
-    private void validatePatchUserRequest(String tenantId, String userId, PatchUserByIdRequest patchUserByIdRequest) {
-        if (patchUserByIdRequest.getEmail() != null) {
-            validateUpdateEmail(tenantId, userId, patchUserByIdRequest.getEmail());
-        }
-        if (patchUserByIdRequest.getPhone() != null) {
-            validateUpdatePhone(tenantId, userId, patchUserByIdRequest.getPhone());
-        }
     }
 
     private void validateUpdateEmail(String tenantId, String userId, String email) {
@@ -293,6 +271,30 @@ public class UserServiceImpl implements UserService {
 
     private boolean isPhoneBelongedToAnotherUser(String tenantId, String userId, String countryCode, String number) {
         return userRepository.countByPhoneExcludeUserId(tenantId, countryCode, number, userId) > 0;
+    }
+
+    private String saveUser(User user) {
+        try {
+            userRepository.persist(user);
+            return user.getId();
+        } catch (Exception e) {
+            String message = "Failed to save user. Reason: {}";
+            LOG.warn(message, e.getMessage());
+            throw ApiServiceException.internalServerError(message, e.getMessage());
+        }
+    }
+
+    private String saveAddress(Address address) {
+        addressRepository.persist(address);
+        return address.getId();
+    }
+
+    private String saveAndAddAddressToUser(String tenantId, String userId, Address address) {
+        User user = findUserByUserId(tenantId, userId);
+
+        user.addAddress(address);
+
+        return saveAddress(address);
     }
 
     private ApiServiceException userNotFoundException(String userId) {

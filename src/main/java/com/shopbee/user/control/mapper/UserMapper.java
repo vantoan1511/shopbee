@@ -38,7 +38,7 @@ public interface UserMapper {
     @Mapping(target = "tenantId", source = "tenantId")
     User toUser(String tenantId, CreateUserRequest createUserRequest);
 
-    @Mapping(target = "mainAddress", ignore = true)
+    @Mapping(target = "mainAddress", source = "mainAddress.id")
     UserDTO toUserDTO(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -47,7 +47,6 @@ public interface UserMapper {
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "mainAddress", ignore = true)
     void patchUser(PatchUserByIdRequest patchUserByIdRequest, @MappingTarget User user, @Context String tenantId);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
@@ -56,6 +55,5 @@ public interface UserMapper {
     @Mapping(target = "addresses", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "mainAddress", ignore = true)
     void updateUser(UpdateUserByIdRequest updateUserByIdRequest, @MappingTarget User user, @Context String tenantId);
 }

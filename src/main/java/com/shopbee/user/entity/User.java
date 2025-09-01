@@ -172,8 +172,16 @@ public class User extends AbstractEntity {
         return mainAddress;
     }
 
-    public void setMainAddress(Address mainAddress) {
-        this.mainAddress = mainAddress;
+    public void setMainAddress(String addressId) {
+        if (this.addresses != null && addressId != null) {
+            this.addresses.forEach(address -> {
+                if (address.getId().equals(addressId)) {
+                    this.mainAddress = address;
+                }
+            });
+        } else {
+            this.mainAddress = null;
+        }
     }
 
     public Phone getPhone() {
@@ -190,8 +198,19 @@ public class User extends AbstractEntity {
     }
 
     public void addAddress(Address address) {
-        addresses.add(address);
-        address.setUser(this);
+        if (address != null) {
+            this.addresses.add(address);
+            address.setUser(this);
+        }
+    }
+
+    public void removeAddress(String addressId) {
+        if (this.addresses != null && addressId != null) {
+            this.addresses.removeIf(address -> address.getId().equals(addressId));
+            if (this.mainAddress != null && this.mainAddress.getId().equals(addressId)) {
+                this.mainAddress = null;
+            }
+        }
     }
 
     public enum Gender {

@@ -13,20 +13,21 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
+import java.net.URI;
 import java.util.List;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ProductMapper {
 
-    ProductDTO toProductDTO(Product source);
+    ProductDTO toProductDTO(Product product);
 
-    List<ProductDTO> toProducts(List<Product> source);
+    List<ProductDTO> toProducts(List<Product> products);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "tenantId", source = "tenantId")
-    Product toProduct(String tenantId, CreateProductRequest source);
+    Product toProduct(String tenantId, CreateProductRequest createProductRequest);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
@@ -34,7 +35,7 @@ public interface ProductMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
-    void patchProduct(PatchProductByIdRequest source, @MappingTarget Product target);
+    void patchProduct(PatchProductByIdRequest patch, @MappingTarget Product product);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     @Mapping(target = "id", ignore = true)
@@ -42,5 +43,14 @@ public interface ProductMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
-    void updateProduct(UpdateProductByIdRequest source, @MappingTarget Product target);
+    void updateProduct(UpdateProductByIdRequest update, @MappingTarget Product product);
+
+    default String map(URI value) {
+        return (value == null) ? null : value.toString();
+    }
+
+    default URI map(String value) {
+        return (value == null) ? null : URI.create(value);
+    }
 }
+

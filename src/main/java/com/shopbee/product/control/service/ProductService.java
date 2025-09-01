@@ -1,5 +1,6 @@
 package com.shopbee.product.control.service;
 
+import com.shopbee.order.model.OrderItemDTO;
 import com.shopbee.product.model.CreateProductRequest;
 import com.shopbee.product.model.PatchProductByIdRequest;
 import com.shopbee.product.model.ProductDTO;
@@ -20,4 +21,8 @@ public interface ProductService {
     void patchProductById(String tenantId, String productId, PatchProductByIdRequest patchProductByIdRequest);
 
     void deleteProductById(String tenantId, String productId);
+
+    void reserveStock(String tenantId, List<OrderItemDTO> items);
+
+    void releaseStock(String tenantId, List<OrderItemDTO> items);
 }

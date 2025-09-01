@@ -1,6 +1,7 @@
 package com.shopbee.product.control.service.impl;
 
 import com.shopbee.common.exception.ApiServiceException;
+import com.shopbee.order.model.OrderItemDTO;
 import com.shopbee.product.control.mapper.ProductMapper;
 import com.shopbee.product.control.repository.ProductRepository;
 import com.shopbee.product.control.service.ProductService;
@@ -46,8 +47,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO getProductById(String tenantId, String productId) {
         LOG.info("Getting product by id [{}]", productId);
-        Product product = findProductById(tenantId, productId);
-        return productMapper.toProductDTO(product);
+        return productMapper.toProductDTO(findProductById(tenantId, productId));
     }
 
     @Override
@@ -82,6 +82,31 @@ public class ProductServiceImpl implements ProductService {
         LOG.info("Deleting product with id [{}]", productId);
         Product product = findProductById(tenantId, productId);
         productRepository.delete(product);
+    }
+
+    @Override
+    @Transactional
+    public void reserveStock(String tenantId, List<OrderItemDTO> items) {
+        LOG.info("Reserving stock for {} items", items.size());
+        for (OrderItemDTO item : items) {
+            Product product = findProductById(tenantId, item.getProductId());
+            int newStock = product.getStockQuantity() - item.getQuantity();
+            if (newStock < 0) {
+                throw ApiServiceException.conflict("Not enough stock for product [{}]. Requested: {}, Available: {}",
+                        item.getProductId(), item.getQuantity(), product.getStockQuantity());
+            }
+            product.setStockQuantity(newStock);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void releaseStock(String tenantId, List<OrderItemDTO> items) {
+        LOG.info("Releasing stock for {} items", items.size());
+        for (OrderItemDTO item : items) {
+            Product product = findProductById(tenantId, item.getProductId());
+            product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
+        }
     }
 
     private Product findProductById(String tenantId, String productId) {

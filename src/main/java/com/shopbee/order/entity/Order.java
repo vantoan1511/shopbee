@@ -6,7 +6,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,11 +28,11 @@ public class Order extends AbstractEntity {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 
     @Column(name = "total_price", nullable = false)
-    private Float totalPrice;
+    private Double totalPrice;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -50,8 +49,6 @@ public class Order extends AbstractEntity {
     public enum Status {
         CREATED, PENDING_PAYMENT, PAID, SHIPPED, DELIVERED, CANCELLED
     }
-
-    // Getters and Setters
 
     public String getId() {
         return id;
@@ -77,11 +74,11 @@ public class Order extends AbstractEntity {
         this.items = items;
     }
 
-    public Float getTotalPrice() {
+    public Double getTotalPrice() {
         return totalPrice;
     }
 
-    public void setTotalPrice(Float totalPrice) {
+    public void setTotalPrice(Double totalPrice) {
         this.totalPrice = totalPrice;
     }
 

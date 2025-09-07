@@ -16,9 +16,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "shopbee_product", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"sku", "tenant_id"})
-})
+@Table(name = "shopbee_product", uniqueConstraints = {@UniqueConstraint(columnNames = {"sku", "tenant_id"})})
 public class Product extends AbstractEntity {
 
     @Id

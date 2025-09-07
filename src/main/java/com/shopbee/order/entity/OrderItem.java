@@ -26,16 +26,11 @@ public class OrderItem extends AbstractEntity {
     @Column(name = "product_id", nullable = false)
     private String productId;
 
-    @Column(name = "product_name", nullable = false)
-    private String productName;
-
     @Column(nullable = false)
     private Integer quantity;
 
     @Column(nullable = false)
     private Float price;
-
-    // Getters and Setters
 
     public String getId() {
         return id;
@@ -59,14 +54,6 @@ public class OrderItem extends AbstractEntity {
 
     public void setProductId(String productId) {
         this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
     }
 
     public Integer getQuantity() {

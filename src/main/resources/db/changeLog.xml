@@ -7,5 +7,6 @@
     <include file="db/0.0.1/user/changeLog.xml"/>
     <include file="db/0.0.1/product/changeLog.xml"/>
     <include file="db/0.0.1/order/changeLog.xml"/>
+    <include file="db/0.0.1/cart/changeLog.xml"/>
 
 </databaseChangeLog>

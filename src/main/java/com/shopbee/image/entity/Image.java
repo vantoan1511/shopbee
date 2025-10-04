@@ -29,7 +29,7 @@ public class Image extends AbstractEntity {
     private String id;
 
     @Column(nullable = false)
-    private byte[] data;
+    private String data;
 
     @Column(name = "file_name", nullable = false)
     private String fileName;
@@ -50,11 +50,11 @@ public class Image extends AbstractEntity {
         this.id = id;
     }
 
-    public byte[] getData() {
+    public String getData() {
         return data;
     }
 
-    public void setData(byte[] data) {
+    public void setData(String data) {
         this.data = data;
     }
 

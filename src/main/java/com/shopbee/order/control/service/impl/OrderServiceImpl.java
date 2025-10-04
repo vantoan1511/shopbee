@@ -54,13 +54,12 @@ public class OrderServiceImpl implements OrderService {
                     OrderItem orderItem = new OrderItem();
                     orderItem.setTenantId(tenantId);
                     orderItem.setProductId(product.getId());
-                    orderItem.setProductName(product.getName());
                     orderItem.setQuantity(itemRequest.getQuantity());
                     orderItem.setPrice(product.getPrice());
                     return orderItem;
                 }).collect(Collectors.toList());
 
-        float totalPrice = (float) orderItems.stream()
+        double totalPrice = orderItems.stream()
                 .mapToDouble(item -> item.getPrice() * item.getQuantity())
                 .sum();
 

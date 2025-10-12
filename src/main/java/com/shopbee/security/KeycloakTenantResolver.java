@@ -56,4 +56,13 @@ public class KeycloakTenantResolver implements TenantConfigResolver {
 
         return Uni.createFrom().item(OidcTenantConfig.builder().tenantId(tenantId).authServerUrl(authServerUrl).build());
     }
+
+    /**
+     * FOR TESTING PURPOSES ONLY.
+     * Provides test classes in the same package access to the internal cache.
+     * @return The internal cache map.
+     */
+    Map<String, String> getCacheForTesting() {
+        return tenantIdToAuthServerUrlCache;
+    }
 }

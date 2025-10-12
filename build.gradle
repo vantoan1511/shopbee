@@ -1,7 +1,7 @@
 plugins {
-    id 'java'
-    id 'io.quarkus'
-    id 'org.openapi.generator' version '7.13.0'
+    id "java"
+    id "io.quarkus"
+    id "org.openapi.generator" version "7.13.0"
 }
 
 repositories {
@@ -14,29 +14,39 @@ repositories {
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
 
+    // Utilities
     implementation "jakarta.validation:jakarta.validation-api"
     implementation "io.quarkus:quarkus-hibernate-validator"
-    implementation 'org.apache.commons:commons-collections4'
-    implementation 'org.apache.commons:commons-lang3'
+    implementation "org.apache.commons:commons-collections4"
+    implementation "org.apache.commons:commons-lang3"
 
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    implementation "org.mapstruct:mapstruct:1.5.5.Final"
+    annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
 
-    // database
-    implementation 'io.quarkus:quarkus-jdbc-postgresql'
-    implementation 'io.quarkus:quarkus-hibernate-orm'
-    implementation 'io.quarkus:quarkus-hibernate-orm-panache'
-    implementation 'io.quarkus:quarkus-liquibase'
+    // Database supports
+    implementation "io.quarkus:quarkus-jdbc-postgresql"
+    implementation "io.quarkus:quarkus-hibernate-orm"
+    implementation "io.quarkus:quarkus-hibernate-orm-panache"
+    implementation "io.quarkus:quarkus-liquibase"
 
-    implementation 'io.quarkus:quarkus-rest'
-    implementation 'io.quarkus:quarkus-rest-jackson'
-    implementation 'io.quarkus:quarkus-oidc'
+    // REST API supports
+    implementation "io.quarkus:quarkus-rest"
+    implementation "io.quarkus:quarkus-rest-jackson"
 
-    testImplementation 'io.quarkus:quarkus-jdbc-h2'
-    testImplementation 'io.quarkus:quarkus-junit5'
-    testImplementation 'io.quarkus:quarkus-junit5-mockito'
-    testImplementation 'io.rest-assured:rest-assured'
-    testImplementation 'org.assertj:assertj-core:3.27.4'
+    // Security
+    implementation "io.quarkus:quarkus-oidc"
+    implementation "io.quarkus:quarkus-keycloak-admin-rest-client"
+
+    // Caching
+    implementation "io.quarkus:quarkus-cache"
+
+
+    // Testing
+    testImplementation "io.quarkus:quarkus-jdbc-h2"
+    testImplementation "io.quarkus:quarkus-junit5"
+    testImplementation "io.quarkus:quarkus-junit5-mockito"
+    testImplementation "io.rest-assured:rest-assured"
+    testImplementation "org.assertj:assertj-core:3.27.4"
 }
 
 group "${projectGroupId}"
@@ -48,35 +58,35 @@ def apiSpecsDir = "$rootDir/src/main/resources/api-specs"
 def generatedSrcDir = "$buildDir/generated/openapi"
 
 // Find all .yaml files in api-specs directory
-def specFiles = fileTree(apiSpecsDir).matching { include '*.yaml' }
+def specFiles = fileTree(apiSpecsDir).matching { include "*.yaml" }
 
 // Create an openApiGenerate task for each spec file
 specFiles.each { specFile ->
-    def specName = specFile.name.replace('.yaml', '')
+    def specName = specFile.name.replace(".yaml", "")
     def taskName = "openApiGenerate_${specName}"
 
     tasks.register(taskName, org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
-        generatorName = 'jaxrs-spec'
+        generatorName = "jaxrs-spec"
         inputSpec = specFile.path
         outputDir = "$generatedSrcDir/$specName"
         apiPackage = "${project.group}.${specName}.boundary.api"
         modelPackage = "${project.group}.${specName}.model"
         invokerPackage = "${project.group}.${specName}.invoker"
         configOptions = [
-                library                       : 'quarkus',
-                dateLibrary                   : 'java8',
-                interfaceOnly                 : 'true',
-                useSwaggerAnnotations         : 'false',
-                returnResponse                : 'true',
-                useJakartaEe                  : 'true',
-                bigDecimalAsString            : 'true',
-                booleanGetterPrefix           : 'get',
-                generateBuilders              : 'true',
-                generateConstructorWithAllArgs: 'true',
-                hideGenerationTimestamp       : 'true',
-                openApiNullable               : 'false',
-                serializableModel             : 'true',
-                useBeanValidation             : 'true',
+                library                       : "quarkus",
+                dateLibrary                   : "java8",
+                interfaceOnly                 : "true",
+                useSwaggerAnnotations         : "false",
+                returnResponse                : "true",
+                useJakartaEe                  : "true",
+                bigDecimalAsString            : "true",
+                booleanGetterPrefix           : "get",
+                generateBuilders              : "true",
+                generateConstructorWithAllArgs: "true",
+                hideGenerationTimestamp       : "true",
+                openApiNullable               : "false",
+                serializableModel             : "true",
+                useBeanValidation             : "true",
         ]
     }
 }
@@ -84,16 +94,16 @@ specFiles.each { specFile ->
 sourceSets {
     main {
         java {
-            srcDirs = ['src/main/java'] + specFiles.collect { "$generatedSrcDir/${it.name.replace('.yaml', '')}/src/gen/java" }
-            exclude '**/invoker/RestApplication.java'
+            srcDirs = ["src/main/java"] + specFiles.collect { "$generatedSrcDir/${it.name.replace(".yaml", "")}/src/gen/java" }
+            exclude "**/invoker/RestApplication.java"
         }
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += [
-            '-parameters'
+            "-parameters"
     ]
 }
 
-compileJava.dependsOn tasks.named { it.startsWith('openApiGenerate_') }
+compileJava.dependsOn tasks.named { it.startsWith("openApiGenerate_") }

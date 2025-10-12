@@ -46,7 +46,11 @@ public final class StringFormatter {
             if (index == -1) {
                 break;
             }
-            sb.replace(index, index + 2, String.valueOf(o));
+            if (o == null) {
+                sb.replace(index, index + 2, "");
+            } else {
+                sb.replace(index, index + 2, String.valueOf(o));
+            }
         }
         return sb.toString();
     }

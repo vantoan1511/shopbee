@@ -8,9 +8,17 @@
 package com.shopbee.tenant.control.repository;
 
 import com.shopbee.tenant.entity.Tenant;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.cache.CacheResult;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.Optional;
+
 @ApplicationScoped
-public class TenantRepository implements PanacheRepository<Tenant> {
+public class TenantRepository implements PanacheRepositoryBase<Tenant, String> {
+
+    @CacheResult(cacheName = "tenants")
+    public Optional<Tenant> findByName(String name) {
+        return find("name", name).firstResultOptional();
+    }
 }

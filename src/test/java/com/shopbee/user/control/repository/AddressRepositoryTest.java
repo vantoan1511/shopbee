@@ -1,5 +1,6 @@
 package com.shopbee.user.control.repository;
 
+import com.shopbee.business.user.control.repository.AddressRepository;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;

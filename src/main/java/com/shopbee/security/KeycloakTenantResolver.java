@@ -8,9 +8,9 @@
 package com.shopbee.security;
 
 
-import com.shopbee.tenant.control.repository.TenantRepository;
-import com.shopbee.tenant.entity.Tenant;
-import com.shopbee.tenant.entity.type.Status;
+import com.shopbee.business.tenant.control.repository.TenantRepository;
+import com.shopbee.business.tenant.entity.Tenant;
+import com.shopbee.business.tenant.entity.type.Status;
 import io.quarkus.oidc.OidcRequestContext;
 import io.quarkus.oidc.OidcTenantConfig;
 import io.quarkus.oidc.TenantConfigResolver;

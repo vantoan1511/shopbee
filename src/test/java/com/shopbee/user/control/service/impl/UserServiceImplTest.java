@@ -1,12 +1,13 @@
 package com.shopbee.user.control.service.impl;
 
+import com.shopbee.business.user.control.service.impl.UserServiceImpl;
 import com.shopbee.common.exception.ApiServiceException;
-import com.shopbee.user.control.mapper.AddressMapper;
-import com.shopbee.user.control.mapper.UserMapper;
-import com.shopbee.user.control.repository.AddressRepository;
-import com.shopbee.user.control.repository.UserRepository;
-import com.shopbee.user.entity.Address;
-import com.shopbee.user.entity.User;
+import com.shopbee.business.user.control.mapper.AddressMapper;
+import com.shopbee.business.user.control.mapper.UserMapper;
+import com.shopbee.business.user.control.repository.AddressRepository;
+import com.shopbee.business.user.control.repository.UserRepository;
+import com.shopbee.business.user.entity.Address;
+import com.shopbee.business.user.entity.User;
 import com.shopbee.user.model.AddressDTO;
 import com.shopbee.user.model.CreateUserAddressRequest;
 import com.shopbee.user.model.CreateUserRequest;

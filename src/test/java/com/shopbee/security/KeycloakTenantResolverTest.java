@@ -78,9 +78,9 @@ class KeycloakTenantResolverTest {
         // To prove the cache is used, we can verify the computation doesn't happen again.
         // A more advanced test could use a spy on UriBuilder, but for now, we'll ensure the
         // cache returns the correct value by checking the cache content directly.
-        Map<String, String> cache = keycloakTenantResolver.getCacheForTesting();
+        Map<String, OidcTenantConfig> cache = keycloakTenantResolver.getCacheForTesting();
         assertTrue(cache.containsKey(tenantId), "Cache should contain the tenantId after the first call");
-        assertEquals(expectedUrl, cache.get(tenantId));
+        assertEquals(expectedUrl, cache.get(tenantId).tenantId().get());
 
         // Act & Assert - Second call (should hit the cache)
         OidcTenantConfig secondResult = keycloakTenantResolver.resolve(routingContext, null).await().indefinitely();

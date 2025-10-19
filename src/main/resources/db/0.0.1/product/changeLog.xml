@@ -1,0 +1,42 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0.0.1-1" author="shopbee">
+        <createTable tableName="shopbee_product">
+            <column name="id" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text"/>
+            <column name="price" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sku" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="varchar(100)"/>
+            <column name="image_url" type="varchar(2048)"/>
+            <column name="stock_quantity" type="int"/>
+            <column name="status" type="varchar(50)"/>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="0.0.1-2" author="shopbee">
+        <addUniqueConstraint tableName="shopbee_product" columnNames="sku, tenant_id" constraintName="unique_sku"/>
+    </changeSet>
+
+</databaseChangeLog>

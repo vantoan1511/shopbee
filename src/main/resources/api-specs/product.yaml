@@ -1,0 +1,323 @@
+openapi: "3.0.3"
+info:
+  version: 1.0.0
+  title: The product service API
+
+tags:
+  - name: products
+    description: Operations about products
+
+paths:
+  /products:
+    get:
+      summary: Retrieve a list of products
+      operationId: getProducts
+      tags:
+        - products
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          description: A list of products.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+    post:
+      summary: Create a new product
+      operationId: createProduct
+      tags:
+        - products
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ProductDTO"
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                    createdAt:
+                      readOnly: true
+                    updatedAt:
+                      readOnly: true
+                  required:
+                    - name
+                    - price
+                    - sku
+      responses:
+        201:
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Id"
+          headers:
+            Location:
+              description: The location of the created product
+              schema:
+                type: string
+                format: uri
+                example: "/products/f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+        400:
+          description: "Bad Request: The request is invalid"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        409:
+          description: "Conflict: A product with the given SKU already exists"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+
+  /products/{productId}:
+    get:
+      summary: Retrieve a product by ID
+      operationId: getProductById
+      tags:
+        - products
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/productId"
+      responses:
+        200:
+          description: "Product found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+    put:
+      summary: Update a product by ID
+      operationId: updateProductById
+      tags:
+        - products
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/productId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ProductDTO"
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                    sku:
+                      readOnly: true
+                    createdAt:
+                      readOnly: true
+                    updatedAt:
+                      readOnly: true
+                  required:
+                    - name
+                    - price
+      responses:
+        200:
+          description: "Product updated"
+        400:
+          description: "Bad Request: The request is invalid"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+    patch:
+      summary: Partially update a product by ID
+      operationId: patchProductById
+      tags:
+        - products
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/productId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ProductDTO"
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                    sku:
+                      readOnly: true
+                    createdAt:
+                      readOnly: true
+                    updatedAt:
+                      readOnly: true
+      responses:
+        200:
+          description: "Product updated"
+        400:
+          description: "Bad Request: The request is invalid"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+    delete:
+      summary: Delete a product by ID
+      operationId: deleteProductById
+      tags:
+        - products
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/productId"
+      responses:
+        204:
+          description: "Product deleted"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+
+security:
+  - BearerAuth: [ ]
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProductDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: "Unique identifier for the product (UUID)."
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        name:
+          type: string
+          maxLength: 255
+          description: "Name of the product."
+          example: "Premium Quality T-Shirt"
+        description:
+          type: string
+          description: "Detailed description of the product."
+          example: "A soft, 100% cotton t-shirt available in multiple colors."
+        price:
+          type: number
+          format: float
+          description: "Price of the product."
+          example: 25.99
+        sku:
+          type: string
+          maxLength: 100
+          description: "Stock Keeping Unit, unique for each product variant."
+          example: "TSHIRT-BLK-L"
+        category:
+          type: string
+          maxLength: 100
+          description: "Category of the product."
+          example: "Apparel"
+        imageUrl:
+          type: string
+          format: uri
+          description: "URL of the product image."
+          example: "https://example.com/images/tshirt.jpg"
+        stockQuantity:
+          type: integer
+          format: int32
+          description: "Available quantity in stock."
+          example: 150
+        status:
+          type: string
+          format: open-enumeration
+          description: |
+            Availability status of the product
+            * AVAILABLE
+            * OUT_OF_STOCK
+          example: "AVAILABLE"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: "Timestamp of product creation."
+          example: "2023-01-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: "Timestamp of last product update."
+          example: "2023-01-02T15:30:00Z"
+    Id:
+      type: string
+      description: "Unique identifier for the resource (UUID)."
+      example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+  parameters:
+    tenantId:
+      name: tenantId
+      in: header
+      description: "The ID of the tenant."
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        example: "shopbee"
+    offset:
+      name: offset
+      in: query
+      description: "The number of items to skip."
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+        minimum: 0
+    limit:
+      name: limit
+      in: query
+      description: "The number of items to return."
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 20
+        minimum: 1
+        maximum: 100
+    productId:
+      name: productId
+      in: path
+      description: "ID of the product."
+      required: true
+      schema:
+        $ref: "#/components/schemas/Id"

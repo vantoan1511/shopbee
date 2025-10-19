@@ -25,6 +25,10 @@ public class ApiServiceException extends WebApplicationException {
         return create(Response.Status.BAD_REQUEST, message, parameters);
     }
 
+    public static ApiServiceException forbidden(String message, Object... parameters) {
+        return create(Response.Status.FORBIDDEN, message, parameters);
+    }
+
     public static ApiServiceException notFound(String message, Object... parameters) {
         return create(Response.Status.NOT_FOUND, message, parameters);
     }

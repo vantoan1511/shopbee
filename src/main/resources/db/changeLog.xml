@@ -9,5 +9,9 @@
 
     <include file="db/0.0.1/userChangeLog.xml"/>
     <include file="db/0.0.1/tenantChangeLog.xml"/>
+    <include file="db/0.0.1/cartChangeLog.xml"/>
+    <include file="db/0.0.1/imageChangeLog.xml"/>
+    <include file="db/0.0.1/orderChangeLog.xml"/>
+    <include file="db/0.0.1/productChangeLog.xml"/>
 
 </databaseChangeLog>

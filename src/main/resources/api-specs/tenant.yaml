@@ -21,7 +21,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Tenant"
+                  $ref: "#/components/schemas/TenantDTO"
     post:
       summary: Create a tenant
       operationId: createTenant
@@ -33,7 +33,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: "#/components/schemas/Tenant"
+                - $ref: "#/components/schemas/TenantDTO"
                 - type: object
                   properties:
                     id:
@@ -82,7 +82,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Tenant"
+                $ref: "#/components/schemas/TenantDTO"
         401:
           description: "Unauthorized: JWT token is missing or invalid"
         403:
@@ -107,7 +107,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: "#/components/schemas/Tenant"
+                - $ref: "#/components/schemas/TenantDTO"
                 - type: object
                   properties:
                     id:
@@ -157,7 +157,7 @@ paths:
 
 components:
   schemas:
-    Tenant:
+    TenantDTO:
       properties:
         id:
           type: string

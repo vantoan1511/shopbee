@@ -8,9 +8,8 @@
 package com.shopbee.security;
 
 
-import com.shopbee.tenant.control.repository.TenantRepository;
-import com.shopbee.tenant.entity.Tenant;
-import com.shopbee.tenant.entity.type.Status;
+import com.shopbee.business.tenant.control.repository.TenantRepository;
+import com.shopbee.business.tenant.entity.Tenant;
 import io.quarkus.oidc.OidcRequestContext;
 import io.quarkus.oidc.OidcTenantConfig;
 import io.quarkus.oidc.TenantConfigResolver;
@@ -75,7 +74,7 @@ public class KeycloakTenantResolver implements TenantConfigResolver {
             LOG.warn("Tenant not found");
             return null;
         }
-        if (tenant.getStatus() == Status.INACTIVE) {
+        if (tenant.getStatus() == Tenant.Status.INACTIVE) {
             LOG.warn("Tenant {} is inactive", tenant.getName());
             return null;
         }

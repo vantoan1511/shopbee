@@ -8,6 +8,7 @@
 package com.shopbee.business.user.boundary.api;
 
 import com.shopbee.business.user.control.service.UserService;
+import com.shopbee.user.boundary.api.UsersApi;
 import com.shopbee.user.model.CreateUserAddressRequest;
 import com.shopbee.user.model.CreateUserRequest;
 import com.shopbee.user.model.PatchUserAddressRequest;

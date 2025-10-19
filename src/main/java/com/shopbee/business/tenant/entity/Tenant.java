@@ -7,7 +7,6 @@
 
 package com.shopbee.business.tenant.entity;
 
-import com.shopbee.business.tenant.entity.type.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,6 +42,10 @@ public class Tenant {
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    public enum Status {
+        ACTIVE, INACTIVE
+    }
 
     public String getId() {
         return id;

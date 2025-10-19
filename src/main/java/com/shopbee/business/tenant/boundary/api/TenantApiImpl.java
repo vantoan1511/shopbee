@@ -7,6 +7,7 @@
 
 package com.shopbee.business.tenant.boundary.api;
 
+import com.shopbee.tenant.boundary.api.TenantsApi;
 import com.shopbee.tenant.model.CreateTenantRequest;
 import jakarta.ws.rs.core.Response;
 

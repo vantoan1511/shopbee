@@ -1,3 +1,5 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
     id "java"
     id "io.quarkus"
@@ -65,7 +67,7 @@ specFiles.each { specFile ->
     def specName = specFile.name.replace(".yaml", "")
     def taskName = "openApiGenerate_${specName}"
 
-    tasks.register(taskName, org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+    tasks.register(taskName, GenerateTask) {
         generatorName = "jaxrs-spec"
         inputSpec = specFile.path
         outputDir = "$generatedSrcDir/$specName"

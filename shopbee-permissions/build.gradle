@@ -1,0 +1,45 @@
+plugins {
+    id "java-library"
+    id "maven-publish"
+}
+
+group "${projectGroupId}"
+version "${projectVersion}"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    /*
+    repositories {
+        maven {
+            name = "myRepo"
+            url = "https://your-repo-url-here"
+            credentials {
+                username = project.findProperty("repoUsername") ?: System.getenv("REPO_USERNAME")
+                password = project.findProperty("repoPassword") ?: System.getenv("REPO_PASSWORD")
+            }
+        }
+    }
+    */
+}
+

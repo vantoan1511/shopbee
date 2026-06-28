@@ -1,0 +1,82 @@
+plugins {
+    id "java"
+    id "io.quarkus"
+    id "maven-publish"
+}
+
+group "${projectGroupId}"
+version "${projectVersion}"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation platform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+
+    // Shopbee APIs
+    implementation "com.shopbee:shopbee-user-service-api:1.0.1"
+
+    // Shopbee Utilities
+    implementation "com.shopbee.common:shopbee-exceptions:1.0.0"
+    implementation "com.shopbee.common:shopbee-rest-client-utils:1.0.0"
+
+    // REST API supports
+    implementation "io.quarkus:quarkus-rest"
+    implementation "io.quarkus:quarkus-rest-jackson"
+    implementation "io.quarkus:quarkus-rest-client-jackson"
+    implementation "io.quarkus:quarkus-smallrye-fault-tolerance"
+
+    // Liveness & readiness supports
+    implementation "io.quarkus:quarkus-smallrye-health"
+
+    // Database supports
+    implementation "io.quarkus:quarkus-jdbc-postgresql"
+    implementation "io.quarkus:quarkus-hibernate-orm"
+    implementation "io.quarkus:quarkus-hibernate-orm-panache"
+    implementation "io.quarkus:quarkus-liquibase"
+
+    // Reactive/async context supports
+//    implementation "io.quarkus:quarkus-smallrye-context-propagation"
+
+    // Security
+    implementation "io.quarkus:quarkus-oidc"
+    implementation "com.shopbee.security:shopbee-tenant-resolver:1.0.0"
+    implementation "com.shopbee.security:shopbee-permissions:1.0.0"
+
+    // Utilities
+    implementation "jakarta.validation:jakarta.validation-api"
+    implementation "io.quarkus:quarkus-hibernate-validator"
+    implementation "org.apache.commons:commons-collections4"
+    implementation "org.apache.commons:commons-lang3"
+
+    implementation "org.mapstruct:mapstruct:1.5.5.Final"
+    annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    /*
+    repositories {
+        maven {
+            name = "myRepo"
+            url = "https://your-repo-url-here"
+            credentials {
+                username = project.findProperty("repoUsername") ?: System.getenv("REPO_USERNAME")
+                password = project.findProperty("repoPassword") ?: System.getenv("REPO_PASSWORD")
+            }
+        }
+    }
+    */
+}
+

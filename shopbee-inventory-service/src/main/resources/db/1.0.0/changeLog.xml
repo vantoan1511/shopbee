@@ -1,0 +1,117 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="shopbee-inventory-service-1.0.0-1" author="shopbee">
+        <createTable tableName="shopbee_inventory">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sku" type="varchar(100)"/>
+            <column name="active" type="boolean"/>
+            <column name="stock_quantity" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_reservation_quantity" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reserved_quantity" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 1. Add unique constraint to inventory to ensure tenant isolation per product -->
+    <changeSet id="shopbee-inventory-service-1.0.0-2" author="shopbee">
+        <addUniqueConstraint tableName="shopbee_inventory"
+                             columnNames="tenant_id, product_id"
+                             constraintName="uk_inventory_tenant_product"/>
+    </changeSet>
+
+    <!-- 2. Create the reservations table for the atomic checkout flow -->
+    <changeSet id="shopbee-inventory-service-1.0.0-3" author="shopbee">
+        <createTable tableName="shopbee_reservations">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_id" type="varchar(64)"/>
+            <column name="product_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_sku" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 3. Create the inventory adjustments table for the audit ledger -->
+    <changeSet id="shopbee-inventory-service-1.0.0-4" author="shopbee">
+        <createTable tableName="shopbee_inventory_adjustments">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="inventory_id" type="uuid">
+                <constraints nullable="false" foreignKeyName="fk_adj_inventory"
+                             referencedTableName="shopbee_inventory" referencedColumnNames="id"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="previous_quantity" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="new_quantity" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_quantity" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(100)"/>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 4. Add index for the ReservationCleanupTask to find expired PENDING reservations quickly -->
+    <changeSet id="shopbee-inventory-service-1.0.0-5" author="shopbee">
+        <createIndex tableName="shopbee_reservations" indexName="idx_res_expiry_status">
+            <column name="expires_at"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

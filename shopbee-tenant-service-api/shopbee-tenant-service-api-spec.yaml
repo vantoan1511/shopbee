@@ -1,0 +1,526 @@
+openapi: "3.0.3"
+info:
+  version: 1.0.3
+  title: The tenant management API
+  description: This is the API documentation for the Tenant Management API.
+  license:
+    name: Copyright by Shopbee, all rights reserved.
+
+paths:
+  /tenants:
+    get:
+      summary: Get all tenants
+      operationId: getAllTenants
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        200:
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TenantDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+    post:
+      summary: Create a tenant
+      operationId: createTenant
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  minLength: 2
+                  description: Name of the tenant
+                  example: "shopbee"
+              required:
+                - name
+
+      responses:
+        201:
+          description: Created tenant
+          headers:
+            Location:
+              description: URL of the created tenant
+              schema:
+                type: string
+                format: uri
+                example: "https://shopbee.com/api/v1/tenants/shopbee"
+        400:
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        409:
+          description: "Conflict: The request could not be completed due to a conflict with the current state of the resource"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+  /tenants/bootstrap:
+    post:
+      summary: Bootstrap the default tenant
+      operationId: bootstrapDefaultTenant
+      tags:
+        - tenants
+      parameters:
+        - name: X-Admin-Secret
+          in: header
+          description: Secret key to authorize bootstrapping the default tenant
+          required: true
+          schema:
+            type: string
+            example: "adminSecretKey"
+      responses:
+        201:
+          description: Bootstrapped default tenant
+          headers:
+            Location:
+              description: URL of the bootstrapped tenant
+              schema:
+                type: string
+                format: uri
+                example: "https://shopbee.com/api/v1/tenants/shopbee"
+        400:
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+  /tenants/{tenantName}:
+    get:
+      summary: Get tenant by id
+      operationId: getTenantById
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+      responses:
+        200:
+          description: The tenant found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+    put:
+      summary: Update a tenant
+      operationId: updateTenantById
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  format: open-enumeration
+                  description: |
+                    Status of the tenant
+                    * ACTIVE - The tenant is active
+                    * INACTIVE - The tenant is inactive
+                  example: "ACTIVE"
+              required:
+                - status
+
+      responses:
+        200:
+          description: "Updated tenant"
+        400:
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        409:
+          description: "Conflict: The request could not be completed due to a conflict with the current state of the resource"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+    delete:
+      summary: Delete a tenant and all its associated data
+      operationId: deleteTenantById
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+      responses:
+        204:
+          description: "Deleted tenant"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+  /tenants/{tenantName}/clients:
+    get:
+      summary: Get clients associated with a tenant
+      operationId: getTenantClients
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        200:
+          description: List of clients associated with the tenant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+    post:
+      summary: Create a client for a tenant
+      operationId: createTenantClient
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientName:
+                  type: string
+                  description: Name of the client
+                  minLength: 2
+                  maxLength: 255
+                  example: "shopbee-client"
+                clientSecret:
+                  type: string
+                  description: Secret key of the client
+                  minLength: 8
+                  maxLength: 512
+                  example: "s3cr3tK3y"
+              required:
+                - clientName
+      responses:
+        201:
+          description: Created client
+          headers:
+            Location:
+              description: URL of the created client
+              schema:
+                type: string
+                format: uri
+                example: "https://shopbee.com/api/v1/tenants/shopbee/clients/123e4567-e89b-12d3-a456-426614174000"
+        400:
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        409:
+          description: "Conflict: The request could not be completed due to a conflict with the current state of the resource"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+  /tenants/{tenantName}/clients/{clientId}:
+    get:
+      summary: Get a client associated with a tenant
+      operationId: getTenantClientById
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+        - $ref: "#/components/parameters/clientId"
+      responses:
+        200:
+          description: The client found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+    put:
+      summary: Update a client associated with a tenant
+      operationId: updateTenantClientById
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+        - $ref: "#/components/parameters/clientId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientName:
+                  type: string
+                  description: Name of the client
+                  minLength: 2
+                  maxLength: 255
+                  example: "shopbee-client-updated"
+                clientSecret:
+                  type: string
+                  description: Secret key of the client
+                  minLength: 8
+                  maxLength: 512
+                  example: "n3wS3cr3tK3y"
+              required:
+                - clientName
+      responses:
+        200:
+          description: "Updated client"
+        400:
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+    delete:
+      summary: Delete a client associated with a tenant
+      operationId: deleteTenantClient
+      tags:
+        - tenants
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/tenantName"
+        - $ref: "#/components/parameters/clientId"
+      responses:
+        204:
+          description: "Deleted client"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    TenantDTO:
+      type: object
+      required:
+        - name
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        name:
+          type: string
+          description: Unique name of the tenant
+          example: "shopbee"
+        status:
+          type: string
+          format: open-enumeration
+          description: |
+            Status of the tenant
+            * ACTIVE - The tenant is active
+            * INACTIVE - The tenant is inactive
+          example: "ACTIVE"
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-02T12:00:00Z"
+    ClientDTO:
+      type: object
+      required:
+        - clientId
+        - clientName
+        - clientSecret
+      properties:
+        clientId:
+          type: string
+          description: Unique identifier of the client
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        clientName:
+          type: string
+          description: Name of the client
+          example: "shopbee-client"
+        clientSecret:
+          type: string
+          description: Secret key of the client
+          example: "s3cr3tK3y"
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-02T12:00:00Z"
+  parameters:
+    tenantId:
+      name: tenantId
+      in: header
+      description: The ID of the tenant which request to.
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        example: "shopbee"
+    page:
+      name: page
+      in: query
+      required: false
+      description: The page number to retrieve.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+        example: 1
+    size:
+      name: size
+      in: query
+      required: false
+      description: The number of items per page.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 20
+        example: 20
+    tenantName:
+      name: tenantName
+      in: path
+      required: true
+      description: The name of the tenant
+      schema:
+        type: string
+        example: "shopbee"
+    clientId:
+      name: clientId
+      in: path
+      required: true
+      description: The ID of the client
+      schema:
+        type: string
+        example: "123e4567-e89b-12d3-a456-426614174000"
+
+security:
+  - bearerAuth: []

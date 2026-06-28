@@ -1,0 +1,56 @@
+plugins {
+    id "java"
+    id "io.quarkus"
+    id "maven-publish"
+}
+
+group "${projectGroupId}"
+version "${projectVersion}"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+
+    // REST API supports
+    implementation "io.quarkus:quarkus-rest"
+    implementation "io.quarkus:quarkus-rest-jackson"
+    implementation "io.quarkus:quarkus-smallrye-health"
+//    implementation "io.quarkus:quarkus-kubernetes"
+//    implementation "io.quarkus:quarkus-container-image-docker"
+
+    // Database supports
+    implementation "io.quarkus:quarkus-jdbc-postgresql"
+    implementation "io.quarkus:quarkus-hibernate-orm"
+    implementation "io.quarkus:quarkus-hibernate-orm-panache"
+    implementation "io.quarkus:quarkus-liquibase"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    /*
+    repositories {
+        maven {
+            name = "myRepo"
+            url = "https://your-repo-url-here"
+            credentials {
+                username = project.findProperty("repoUsername") ?: System.getenv("REPO_USERNAME")
+                password = project.findProperty("repoPassword") ?: System.getenv("REPO_PASSWORD")
+            }
+        }
+    }
+    */
+}
+

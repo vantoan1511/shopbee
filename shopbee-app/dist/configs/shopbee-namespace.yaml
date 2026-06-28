@@ -1,0 +1,8 @@
+# shopbee-namespace.yaml
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shopbee
+  labels:
+    app: shopbee

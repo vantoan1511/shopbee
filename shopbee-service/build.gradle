@@ -1,0 +1,115 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
+plugins {
+    id "java"
+    id "io.quarkus"
+    id "org.openapi.generator" version "7.13.0"
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+// Project dependencies
+
+dependencies {
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+
+    // Utilities
+    implementation "jakarta.validation:jakarta.validation-api"
+    implementation "io.quarkus:quarkus-hibernate-validator"
+    implementation "org.apache.commons:commons-collections4"
+    implementation "org.apache.commons:commons-lang3"
+    implementation "com.shopbee.common:shopbee-exceptions:1.0.0"
+
+    implementation "org.mapstruct:mapstruct:1.5.5.Final"
+    annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
+
+    // Database supports
+    implementation "io.quarkus:quarkus-jdbc-postgresql"
+    implementation "io.quarkus:quarkus-hibernate-orm"
+    implementation "io.quarkus:quarkus-hibernate-orm-panache"
+    implementation "io.quarkus:quarkus-liquibase"
+
+    // REST API supports
+    implementation "io.quarkus:quarkus-rest"
+    implementation "io.quarkus:quarkus-rest-jackson"
+    implementation "io.quarkus:quarkus-rest-client-jackson"
+    implementation "io.quarkus:quarkus-smallrye-fault-tolerance"
+
+    // Reactive/async context supports
+    implementation "io.quarkus:quarkus-smallrye-context-propagation"
+
+    // Security
+    implementation "io.quarkus:quarkus-oidc"
+    implementation "io.quarkus:quarkus-keycloak-admin-rest-client"
+
+    // Caching
+    implementation "io.quarkus:quarkus-cache"
+
+
+    // Testing
+    testImplementation "io.quarkus:quarkus-jdbc-h2"
+    testImplementation "io.quarkus:quarkus-junit5"
+    testImplementation "io.quarkus:quarkus-junit5-mockito"
+}
+
+group "${projectGroupId}"
+version "${projectVersion}"
+
+// Generate OpenAPI specs from YAML files
+
+def apiSpecsDir = "$rootDir/src/main/resources/api-specs"
+def generatedSrcDir = "$buildDir/generated/openapi"
+
+// Find all .yaml files in api-specs directory
+def specFiles = fileTree(apiSpecsDir).matching { include "*.yaml" }
+
+// Create an openApiGenerate task for each spec file
+specFiles.each { specFile ->
+    def specName = specFile.name.replace(".yaml", "")
+    def taskName = "openApiGenerate_${specName}"
+
+    tasks.register(taskName, GenerateTask) {
+        generatorName = "jaxrs-spec"
+        inputSpec = specFile.path
+        outputDir = "$generatedSrcDir/$specName"
+        apiPackage = "${project.group}.${specName}.boundary.api"
+        modelPackage = "${project.group}.${specName}.model"
+        invokerPackage = "${project.group}.${specName}.invoker"
+        configOptions = [
+                library                       : "quarkus",
+                dateLibrary                   : "java8",
+                interfaceOnly                 : "true",
+                useSwaggerAnnotations         : "false",
+                returnResponse                : "true",
+                useJakartaEe                  : "true",
+                bigDecimalAsString            : "true",
+                booleanGetterPrefix           : "get",
+                generateBuilders              : "false",
+                generateConstructorWithAllArgs: "true",
+                hideGenerationTimestamp       : "true",
+                openApiNullable               : "false",
+                serializableModel             : "true",
+                useBeanValidation             : "true",
+        ]
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/main/java"] + specFiles.collect { "$generatedSrcDir/${it.name.replace(".yaml", "")}/src/gen/java" }
+            exclude "**/invoker/RestApplication.java"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+            "-parameters"
+    ]
+}
+
+compileJava.dependsOn tasks.named { it.startsWith("openApiGenerate_") }

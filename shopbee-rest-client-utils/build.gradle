@@ -1,0 +1,46 @@
+plugins {
+    id "java-library"
+    id "maven-publish"
+}
+
+group = "${projectGroupId}"
+version = "${projectVersion}"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    // Logging
+    compileOnly 'org.slf4j:slf4j-api:2.0.17'
+
+    // Shopbee Utilities
+    compileOnly "com.shopbee.common:shopbee-exceptions:1.0.2"
+
+    // Jakarta EE APIs
+    compileOnly "jakarta.ws.rs:jakarta.ws.rs-api:4.0.0"
+    compileOnly "jakarta.validation:jakarta.validation-api:3.1.1"
+    compileOnly 'jakarta.annotation:jakarta.annotation-api:3.0.0'
+
+    // MicroProfile APIs
+    compileOnly 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api:4.0'
+
+    // Testing
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.1"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+

@@ -1,0 +1,103 @@
+# shopbee-db.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopbee-db-configs
+  namespace: shopbee
+data:
+  DATABASE_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+  PGDATA: /var/lib/postgresql/data/pgdata
+  init-keycloak.sql: |
+    CREATE SCHEMA IF NOT EXISTS keycloak;
+    GRANT ALL PRIVILEGES ON SCHEMA keycloak TO shopbee;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shopbee-db-pvc
+  namespace: shopbee
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: shopbee-db
+  namespace: shopbee
+spec:
+  serviceName: shopbee-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopbee-db
+  template:
+    metadata:
+      labels:
+        app: shopbee-db
+    spec:
+      containers:
+        - name: shopbee-db
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: shopbee-db-configs
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shopbee-service-secrets
+                  key: DB_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopbee-service-secrets
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              value: shopbee
+          volumeMounts:
+            - name: shopbee-db-storage
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-initdb
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "shopbee"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: shopbee-db-storage
+          persistentVolumeClaim:
+            claimName: shopbee-db-pvc
+        - name: postgres-initdb
+          configMap:
+            name: shopbee-db-configs
+            items:
+              - key: init-keycloak.sql
+                path: init-keycloak.sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopbee-db
+  namespace: shopbee
+spec:
+  type: ClusterIP
+  selector:
+    app: shopbee-db
+  ports:
+    - port: 5432
+      targetPort: 5432

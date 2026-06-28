@@ -1,0 +1,94 @@
+plugins {
+    id "java-library"
+    id "maven-publish"
+    id "org.openapi.generator" version "${openApiGeneratorVersion}"
+}
+
+group "${projectGroupId}"
+version "${projectVersion}"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation "jakarta.validation:jakarta.validation-api:${jakartaValidationVersion}"
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:${jakartaWsRsVersion}"
+    implementation "jakarta.annotation:jakarta.annotation-api:${jakartaAnnotationVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:${jacksonAnnotationsVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonDatabindVersion}"
+}
+
+openApiGenerate {
+    generatorName = "jaxrs-spec"
+    inputSpec = "$rootDir/shopbee-product-service-api-spec.yaml"
+    outputDir = rootProject.layout.buildDirectory.dir("generated").map { it.asFile.path }
+    apiPackage = "${projectPackageId}.boundary.api"
+    modelPackage = "${projectPackageId}.entity"
+
+    configOptions = [
+            library                       : "quarkus",
+            dateLibrary                   : "java8",
+            interfaceOnly                 : "true",
+            useSwaggerAnnotations         : "false",
+            returnResponse                : "true",
+            useJakartaEe                  : "true",
+            bigDecimalAsString            : "true",
+            booleanGetterPrefix           : "get",
+            hideGenerationTimestamp       : "true",
+            openApiNullable               : "false",
+            serializableModel             : "true",
+            useBeanValidation             : "true",
+    ]
+
+    // Generate only models and API interfaces
+    globalProperties = [
+            models: "",
+            apis  : ""
+    ]
+}
+
+// Add generated sources to compilation
+sourceSets {
+    main {
+        java {
+            srcDir "$buildDir/generated/src/gen/java"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+            "-parameters"
+    ]
+}
+
+// Ensure code generation runs before compilation
+compileJava.dependsOn tasks.openApiGenerate
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    /*
+    repositories {
+        maven {
+            name = "myRepo"
+            url = "https://your-repo-url-here"
+            credentials {
+                username = project.findProperty("repoUsername") ?: System.getenv("REPO_USERNAME")
+                password = project.findProperty("repoPassword") ?: System.getenv("REPO_PASSWORD")
+            }
+        }
+    }
+    */
+}
+

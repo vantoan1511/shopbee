@@ -1,0 +1,228 @@
+openapi: "3.0.3"
+info:
+  version: 1.0.0
+  title: The image service API
+
+tags:
+  - name: images
+    description: Operations about images
+
+paths:
+  /images:
+    get:
+      summary: Retrieve images
+      operationId: getImages
+      tags:
+        - images
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        200:
+          description: A list of images.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/ImageDTO"
+                    - type: object
+                      properties:
+                        data:
+                          writeOnly: true
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+    post:
+      summary: Upload a new image
+      operationId: uploadImage
+      tags:
+        - images
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/ImageDTO"
+                - type: object
+                  properties:
+                    id:
+                      readOnly: true
+                    data:
+                      type: string
+                      format: base64
+                      description: "Data of image in base64 format."
+                      example: "3hskdfs83h=="
+                    createdAt:
+                      readOnly: true
+                    updatedAt:
+                      readOnly: true
+                  required:
+                    - fileName
+                    - data
+
+      responses:
+        201:
+          description: Image created
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+          headers:
+            Location:
+              description: The location of the created image
+              schema:
+                type: string
+                format: uri
+                example: "/images/f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+        400:
+          description: "Bad Request: The request is invalid due to malformed syntax or validation error"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+  /images/{imageId}:
+    get:
+      summary: Retrieve an image by ID
+      operationId: getImageById
+      tags:
+        - images
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/imageId"
+      responses:
+        200:
+          description: "Image found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+    delete:
+      summary: Delete an image by ID
+      operationId: deleteImageById
+      tags:
+        - images
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/imageId"
+      responses:
+        204:
+          description: "Image deleted"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The requested resource is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        501:
+          description: "Not Implemented: The operation is not implemented"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+
+security:
+  - BearerAuth: [ ]
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ImageDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the image (UUID)."
+          example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+        data:
+          type: string
+          description: "Data of the image in base64 format."
+          example: "acb=="
+        fileName:
+          type: string
+          description: "File name of the image"
+          example: "avatar.png"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Id:
+      type: string
+      description: "Unique identifier for the resource (UUID)."
+      example: "f7b3f1b1-5b7b-4b3b-8b3b-7b3b1f7b3b1f"
+
+  parameters:
+    tenantId:
+      name: tenantId
+      in: header
+      description: "The ID of the tenant."
+      required: true
+      schema:
+        type: string
+        example: "shopbee"
+    page:
+      name: page
+      in: query
+      description: "The page number."
+      schema:
+        type: integer
+        format: int32
+        default: 0
+        minimum: 0
+    size:
+      name: size
+      in: query
+      description: "The number of items to return."
+      schema:
+        type: integer
+        format: int32
+        default: 20
+        minimum: 1
+        maximum: 100
+    imageId:
+      name: imageId
+      in: path
+      description: "ID of the image."
+      required: true
+      schema:
+        $ref: "#/components/schemas/Id"

@@ -1,0 +1,36 @@
+{
+  "name": "shopbee-ui",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@primeuix/themes": "^2.0.3",
+    "nuxt": "^4.2.0",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.5"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.9.0",
+    "@primevue/nuxt-module": "^4.5.5",
+    "@tailwindcss/vite": "^4.3.0",
+    "baseline-browser-mapping": "^2.10.34",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
+    "tailwindcss": "^4.3.0",
+    "tailwindcss-primeui": "^0.6.1",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.1.2"
+  }
+}

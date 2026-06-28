@@ -1,0 +1,510 @@
+openapi: 3.0.3
+info:
+  title: shopbee-inventory-service-api
+  description: API specification for shopbee-inventory-service-api
+  version: 1.0.1
+
+tags:
+  - name: inventory
+    description: Allow to manage inventory
+  - name: reservation
+    description: Allow to reserve, confirm or release a reservation
+
+paths:
+  /inventory:
+    post:
+      summary: Create a new inventory item
+      description: Create a new inventory item
+      operationId: createInventory
+      tags:
+        - inventory
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      requestBody:
+        required: true
+        description: Inventory item to create
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: "#/components/schemas/Id"
+                sku:
+                  type: string
+                  maxLength: 100
+                  description: "SKU of the product."
+                  example: "SKU123"
+                active:
+                  type: boolean
+                  description: "Indicates if the product is for sale."
+                  example: true
+                stockQuantity:
+                  type: integer
+                  format: int32
+                  example: 10
+                maxReservationQuantity:
+                  type: integer
+                  format: int32
+                  description: "Maximum quantity that can be reserved."
+                  example: 5
+              required:
+                - productId
+                - sku
+                - stockQuantity
+                - maxReservationQuantity
+      responses:
+        201:
+          description: Inventory item created
+          headers:
+            Location:
+              description: The location of the created inventory
+              schema:
+                type: string
+                format: uri
+                example: "https://shopbee.com/api/inventory/a1b2c3d4-e5f6-7890-1234-567890abcdef"
+
+    get:
+      summary: Get a list of inventory items
+      description: Get a list of inventory items
+      operationId: getInventory
+      tags:
+        - inventory
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        200:
+          description: A list of inventory items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryItem"
+
+  /inventory/{inventoryId}:
+    get:
+      summary: Get an inventory item by ID
+      description: Get an inventory item by ID
+      operationId: getInventoryById
+      tags:
+        - inventory
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/inventoryId"
+      responses:
+        200:
+          description: Inventory item found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+
+    put:
+      summary: Update an inventory item
+      description: Update an inventory item
+      operationId: updateInventory
+      tags:
+        - inventory
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/inventoryId"
+      requestBody:
+        required: true
+        description: Inventory item to update
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: "#/components/schemas/Id"
+                sku:
+                  type: string
+                  maxLength: 100
+                  description: "SKU of the product."
+                  example: "SKU123"
+                active:
+                  type: boolean
+                  description: "Indicates if the product is for sale."
+                  example: true
+                stockQuantity:
+                  type: integer
+                  format: int32
+                  example: 10
+                maxReservationQuantity:
+                  type: integer
+                  format: int32
+                  description: "Maximum quantity that can be reserved."
+                  example: 5
+                reservedQuantity:
+                  type: integer
+                  format: int32
+                  description: "Quantity that is currently reserved."
+                  example: 2
+                adjustmentReason:
+                  type: string
+                  description: "Reason for manual stock adjustment (Required for audit)."
+                  example: "Restock from shipment #445"
+                  maxLength: 255
+              required:
+                - sku
+                - stockQuantity
+                - maxReservationQuantity
+      responses:
+        201:
+          description: Inventory item updated successfully
+
+    patch:
+      summary: Patch an inventory item
+      description: Patch an inventory item
+      operationId: patchInventory
+      tags:
+        - inventory
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/inventoryId"
+      requestBody:
+        required: true
+        description: Inventory item to patch
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: "#/components/schemas/Id"
+                sku:
+                  type: string
+                  maxLength: 100
+                  description: "SKU of the product."
+                  example: "SKU123"
+                active:
+                  type: boolean
+                  description: "Indicates if the product is for sale."
+                  example: true
+                stockQuantity:
+                  type: integer
+                  format: int32
+                  example: 10
+                maxReservationQuantity:
+                  type: integer
+                  format: int32
+                  description: "Maximum quantity that can be reserved."
+                  example: 5
+                reservedQuantity:
+                  type: integer
+                  format: int32
+                  description: "Quantity that is currently reserved."
+                  example: 2
+                adjustmentReason:
+                  type: string
+                  description: "Reason for manual stock adjustment."
+                  example: "Cycle count correction"
+                  maxLength: 255
+      responses:
+        201:
+          description: Inventory item patched successfully
+    delete:
+      summary: Delete an inventory item
+      description: Delete an inventory item
+      operationId: deleteInventory
+      tags:
+        - inventory
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/inventoryId"
+      responses:
+        204:
+          description: Inventory item deleted successfully
+
+  /inventory/{inventoryId}/adjustments:
+    get:
+      summary: Get adjustment history for an inventory item
+      description: Returns a paginated list of manual stock adjustments made to this item for audit purposes.
+      operationId: getInventoryAdjustments
+      tags:
+        - inventory
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/inventoryId"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        200:
+          description: A list of adjustment records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryAdjustment"
+
+  /inventory/reservations:
+    post:
+      summary: Reserve an inventory item
+      description: Reserve an inventory item
+      operationId: reserveInventory
+      tags:
+        - reservation
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      requestBody:
+        required: true
+        description: Inventory item to reserve, at least item id or sku must be provided
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: "#/components/schemas/Id"
+                quantity:
+                  type: integer
+                  format: int32
+                sku:
+                  type: string
+                  maxLength: 100
+                orderId:
+                  type: string
+                  description: "Reference to the order or cart triggering this reservation."
+                  example: "ORD-9982"
+              required:
+                - quantity
+      responses:
+        200:
+          description: Inventory item reserved successfully
+          headers:
+            Location:
+              description: The location of the created reservation
+              schema:
+                type: string
+                format: uri
+                example: "https://shopbee.com/api/inventory/reservations/a1b2c3d4-e5f6-7890-1234-567890abcdef"
+
+  /inventory/reservations/{reservationId}:
+    get:
+      summary: Get a reservation by ID
+      description: Get a reservation by ID
+      operationId: getReservationById
+      tags:
+        - reservation
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/reservationId"
+      responses:
+        200:
+          description: Reservation found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    maxLength: 64
+                    description: "Unique identifier for the reservation (UUID)."
+                    example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  productId:
+                    type: string
+                    maxLength: 64
+                    description: "Unique identifier for the product (UUID)."
+                    example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  productSku:
+                    type: string
+                    maxLength: 100
+                    description: "SKU of the product."
+                    example: "SKU123"
+                  quantity:
+                    type: integer
+                    format: int32
+                    example: 1
+                  status:
+                    type: string
+                    format: open-enumeration
+                    description: |
+                      * PENDING
+                      * CONFIRMED
+                      * CANCELLED
+                    example: PENDING
+                    maxLength: 10
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  orderId:
+                    type: string
+
+    post:
+      summary: Confirm/Release a reservation
+      description: Confirm/Release a reservation
+      operationId: confirmReservation
+      tags:
+        - reservation
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/reservationId"
+      requestBody:
+        required: true
+        description: Reservation to confirm/release
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  format: open-enumeration
+                  description: |
+                    * CONFIRM - Confirm the reservation
+                    * RELEASE - Release the reservation
+                  example: CONFIRM
+                  maxLength: 10
+              required:
+                - action
+      responses:
+        200:
+          description: Reservation confirmed successfully
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Id:
+      type: string
+      description: "Unique identifier for the resource (UUID)."
+      example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+    InventoryItem:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        productId:
+          $ref: "#/components/schemas/Id"
+        sku:
+          type: string
+          maxLength: 100
+          description: "SKU of the product."
+          example: "SKU123"
+        active:
+          type: boolean
+          description: "Indicates if the product is for sale."
+          example: true
+        stockQuantity:
+          type: integer
+          format: int32
+          example: 10
+        maxReservationQuantity:
+          type: integer
+          format: int32
+          description: "Maximum quantity that can be reserved."
+          example: 5
+        reservedQuantity:
+          type: integer
+          format: int32
+          description: "Quantity that is currently reserved."
+          example: 2
+        availableQuantity:
+          type: integer
+          format: int32
+          description: "Calculated quantity available for new sales (Physical - Reserved)."
+          example: 8
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          description: "Date and time when the inventory item was created."
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Date and time when the inventory item was last updated."
+    InventoryAdjustment:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        inventoryId:
+          $ref: "#/components/schemas/Id"
+        previousQuantity:
+          type: integer
+          format: int32
+          description: "Physical quantity before the adjustment."
+          example: 10
+        newQuantity:
+          type: integer
+          format: int32
+          description: "Physical quantity after the adjustment."
+          example: 15
+        changeQuantity:
+          type: integer
+          format: int32
+          description: "The delta change applied (e.g., +5 or -2)."
+          example: 5
+        reason:
+          type: string
+          description: "The reason provided for this manual adjustment."
+          example: "Restock from shipment #445"
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          description: "The user who performed the adjustment."
+          example: "admin_user"
+  parameters:
+    tenantId:
+      name: tenantId
+      in: header
+      description: "The ID of the tenant."
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        example: "shopbee"
+    reservationId:
+      name: reservationId
+      in: path
+      description: "ID of the reservation."
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+    inventoryId:
+      name: inventoryId
+      in: path
+      description: "ID of the inventory item."
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+    page:
+      name: page
+      in: query
+      description: The page number to retrieve.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        minimum: 1
+        example: 1
+    size:
+      name: size
+      in: query
+      description: The number of items per page.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 20
+        minimum: 1
+        maximum: 100

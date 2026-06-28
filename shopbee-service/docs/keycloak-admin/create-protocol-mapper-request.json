@@ -1,0 +1,17 @@
+{
+  "protocol": "openid-connect",
+  "protocolMapper": "oidc-usermodel-client-role-mapper",
+  "name": "permissions",
+  "config": {
+    "usermodel.clientRoleMapping.clientId": "shopbee-application",
+    "usermodel.clientRoleMapping.rolePrefix": "",
+    "multivalued": "true",
+    "claim.name": "permissions",
+    "jsonType.label": "String",
+    "id.token.claim": "false",
+    "access.token.claim": "true",
+    "lightweight.claim": "false",
+    "userinfo.token.claim": "false",
+    "introspection.token.claim": "false"
+  }
+}

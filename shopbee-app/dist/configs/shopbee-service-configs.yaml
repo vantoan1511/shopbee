@@ -1,0 +1,23 @@
+# shopbee-service-configs.yaml
+#
+# This file contains the common configuration for all ShopBee services.
+# It is used to store the database connection information and the authentication server information.
+# It is used by all services to connect to the database and the authentication server.
+# It is also used to store the database schema information for the services that use the database.
+# The services that use the database will use the DB_SERVICE_SCHEMA for their own schema and the DB_IDM_SCHEMA for the Keycloak schema.
+# The services that do not use the database will ignore these values.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopbee-service-configs
+  namespace: shopbee
+data:
+  DB_KIND: postgres
+  DB_URL: jdbc:postgresql://shopbee-db:5432/shopbee
+  DB_NAME: shopbee
+  DB_SERVICE_SCHEMA: public
+  DB_IDM_SCHEMA: keycloak
+  AUTH_SERVER_URL: http://shopbee-keycloak:8080/
+  AUTH_ISSUER: http://shopbee.com.local/
+  AUTH_CLIENT_ID: shopbee

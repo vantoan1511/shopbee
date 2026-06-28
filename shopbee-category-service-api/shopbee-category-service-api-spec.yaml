@@ -1,0 +1,297 @@
+openapi: "3.0.3"
+info:
+  version: 1.0.1
+  title: The category management API
+  description: This is the API documentation for the Category Management API.
+  license:
+    name: Copyright by Shopbee, all rights reserved.
+
+tags:
+  - name: categories
+    description: Operations about categories
+
+paths:
+  /categories:
+    get:
+      summary: Retrieve a list of categories
+      operationId: getCategories
+      tags:
+        - categories
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/code"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        200:
+          description: A list of categories.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+        503:
+          description: "Service Unavailable: The service is temporarily unavailable"
+    post:
+      summary: Create a new category
+      operationId: createCategory
+      tags:
+        - categories
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: "Name of the category."
+                  example: "Electronics"
+                code:
+                  type: string
+                  maxLength: 100
+                  description: "Unique code for the category."
+                  example: "ELEC"
+                active:
+                  type: boolean
+                  description: "Indicates if the category is active."
+                  example: true
+                  default: true
+              required:
+                - name
+                - code
+      responses:
+        201:
+          description: Category created
+          headers:
+            Location:
+              description: The location of the created category
+              schema:
+                type: string
+                format: uri
+                example: "https://shopbee.com/api/categories/a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        400:
+          description: "Bad Request: The request is invalid"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        409:
+          description: "Conflict: A product with the given SKU already exists"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+
+  /categories/{categoryId}:
+    get:
+      summary: Retrieve a category by ID
+      operationId: getCategoryById
+      tags:
+        - categories
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/categoryId"
+      responses:
+        200:
+          description: "Category found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryDTO"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+    put:
+      summary: Update a category by ID
+      operationId: updateCategoryById
+      tags:
+        - categories
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/categoryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: "Name of the category."
+                  example: "Electronics"
+                active:
+                  type: boolean
+                  description: "Indicates if the category is active."
+                  example: true
+              required:
+                - name
+      responses:
+        200:
+          description: "Category updated"
+        400:
+          description: "Bad Request: The request is invalid"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+    patch:
+      summary: Patch a category by ID
+      operationId: patchCategoryById
+      tags:
+        - categories
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/categoryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: "Name of the category."
+                  example: "Electronics"
+                active:
+                  type: boolean
+                  description: "Indicates if the category is active."
+                  example: true
+      responses:
+        200:
+          description: "Category updated"
+        400:
+          description: "Bad Request: The request is invalid"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+    delete:
+      summary: Delete a category by ID
+      operationId: deleteCategoryById
+      tags:
+        - categories
+      parameters:
+        - $ref: "#/components/parameters/tenantId"
+        - $ref: "#/components/parameters/categoryId"
+      responses:
+        204:
+          description: "Category deleted"
+        401:
+          description: "Unauthorized: JWT token is missing or invalid"
+        403:
+          description: "Forbidden: The caller does not have permission"
+        404:
+          description: "Not Found: The product is not found"
+        500:
+          description: "Internal Server Error: An unexpected error occurred"
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CategoryDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Unique identifier for the product (UUID)."
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        name:
+          type: string
+          maxLength: 255
+          description: "Name of the category."
+          example: "Electronics"
+        code:
+          type: string
+          maxLength: 100
+          description: "Unique code for the category."
+          example: "ELEC"
+        active:
+          type: boolean
+          description: "Indicates if the category is active."
+          example: true
+    Id:
+      type: string
+      description: "Unique identifier for the resource (UUID)."
+      example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+  parameters:
+    tenantId:
+      name: tenantId
+      in: header
+      description: "The ID of the tenant."
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        example: "shopbee"
+    page:
+      name: page
+      in: query
+      description: The page number to retrieve.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        minimum: 1
+        example: 1
+    size:
+      name: size
+      in: query
+      description: The number of items per page.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 20
+        minimum: 1
+        maximum: 100
+    code:
+      name: code
+      in: query
+      description: Code includes in response.
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    categoryId:
+      name: categoryId
+      in: path
+      description: "ID of the category."
+      required: true
+      schema:
+        $ref: "#/components/schemas/Id"

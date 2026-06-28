@@ -1,0 +1,49 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: shopbee-ingress
+  name: shopbee-ingress
+  namespace: shopbee
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: shopbee.com.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: shopbee-keycloak
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+          - backend:
+              service:
+                name: shopbee-tenant-service
+                port:
+                  name: http
+            path: /api/tenants
+            pathType: Prefix
+          - backend:
+              service:
+                name: shopbee-user-service
+                port:
+                  name: http
+            path: /api/users
+            pathType: Prefix
+          - backend:
+              service:
+                name: shopbee-category-service
+                port:
+                  name: http
+            path: /api/categories
+            pathType: Prefix
+          - backend:
+              service:
+                name: shopbee-product-service
+                port:
+                  name: http
+            path: /api/products
+            pathType: Prefix

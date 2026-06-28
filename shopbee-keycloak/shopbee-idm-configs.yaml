@@ -1,0 +1,14 @@
+# shopbee-idm-configs.yaml
+# Define specific configurations for the Identity Management (IDM) service, including database connection details and credentials for Keycloak administration.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopbee-idm-configs
+  namespace: shopbee
+data:
+  DB_KIND: postgres
+  DB_URL: jdbc:postgresql://shopbee-db:5432/shopbee
+  DB_NAME: shopbee
+  DB_IDM_SCHEMA: keycloak
+  KC_HOSTNAME: http://shopbee.com.local

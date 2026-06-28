@@ -1,0 +1,131 @@
+# shopbee-tenant-service.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: shopbee-tenant-service
+  name: shopbee-tenant-service
+  namespace: shopbee
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    name: shopbee-tenant-service
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: shopbee-tenant-service
+  name: shopbee-tenant-service
+  namespace: shopbee
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: shopbee-tenant-service
+  template:
+    metadata:
+      labels:
+        name: shopbee-tenant-service
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: DATABASE_KIND
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_KIND
+                  name: shopbee-service-configs
+            - name: DATABASE_JDBC_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_URL
+                  name: shopbee-service-configs
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: DB_USERNAME
+                  name: shopbee-service-secrets
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: DB_PASSWORD
+                  name: shopbee-service-secrets
+            - name: AUTH_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: AUTH_SERVER_URL
+                  name: shopbee-service-configs
+            - name: AUTH_ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  key: AUTH_ISSUER
+                  name: shopbee-service-configs
+            - name: AUTH_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  key: AUTH_CLIENT_ID
+                  name: shopbee-service-configs
+            - name: KC_PLATFORM_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shopbee-idm-secrets
+                  key: KC_PLATFORM_ADMIN_CLIENT_SECRET
+            - name: KC_PLATFORM_SUPPORT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shopbee-idm-secrets
+                  key: KC_PLATFORM_SUPPORT_CLIENT_SECRET
+          image: com.shopbee/shopbee-tenant-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/q/health/live
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+          name: shopbee-tenant-service
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/q/health/ready
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 64Mi
+          startupProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/q/health/started
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
